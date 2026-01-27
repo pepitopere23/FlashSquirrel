@@ -123,13 +123,13 @@ graph TD
 
 ### 2. Apple 全家桶用戶 (Apple Ecosystem)
 1.  **環境配置**：在 iCloud Drive 中確保有一個名為 **`研究工作流`** 的資料夾（名稱必須完全一致，以匹配 iOS 捷徑）。
-2.  **一鍵啟動**：執行 `python start.py` 並選擇 iCloud 路徑。
+2.  **一鍵啟動**：執行 `python start.py` 並直接按 **Enter** 確認預設路徑。
 3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
 4.  **自動化**：手機上傳，Mac 在後台自動執行研發與更名。
 
 > [!IMPORTANT]
 > **💡 常見問題與技術說明 (FAQ & Tech Notes)**
-> *   **資料夾生成**：只要執行 `start.py` 並選擇路徑，系統會自動建立完整結構。建議先手動建立「研究工作流」主目錄以供移動端即時存入。
+> *   **資料夾生成**：只要執行 `start.py` 並按下 **Enter**，系統就會自動在您的 iCloud 中變出完整結構。建議先手動建立「研究工作流」主目錄以供移動端即時存入。
 > *   **同步響應時間**：請確認 Mac 已開啟「完全磁碟取用權限」。iCloud 指令同步到電腦約需 5-30 秒之響應時間（視網路而定）。
 
 ### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
@@ -223,13 +223,13 @@ To fit different workflows, we offer two tiers of automation:
 
 ### 2. Apple Ecosystem
 1.  **Environment**: Ensure you have a folder named **`研究工作流`** in your iCloud Drive (The name must match the iOS Shortcut exactly).
-2.  **One-Word Start**: Run `python start.py` and select the iCloud path.
+2.  **One-Word Start**: Run `python start.py` and press **Enter** to confirm the default path.
 3.  **Syncing**: [Download the iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) and share files (photos, web, PDFs) to that folder.
 4.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
 
 > [!IMPORTANT]
 > **💡 FAQ & Technical Notes**
-> *   **Folder Generation**: `start.py` will auto-generate the structure. We recommend creating the main "研究工作流" folder first for immediate mobile use.
+> *   **Folder Generation**: Simply run `start.py` and press **Enter**; the system will auto-generate the structure in your iCloud. We recommend creating the main "研究工作流" folder first for immediate mobile use.
 > *   **Sync Latency**: Ensure "Full Disk Access" is enabled on your Mac. iCloud sync typically has a 5-30s response time depending on network conditions.
 
 ### 3. Windows & Cross-Platform
