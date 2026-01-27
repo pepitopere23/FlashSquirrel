@@ -31,7 +31,9 @@
 每天節省的手動處理時間約為 5 小時，每月累計節省約 150 小時。讓 AI 負責繁複的勞力，您負責最終的決策。
 
 ### 3. 金錢守護者 (Cost Guardian) 🛡️
-系統內建實時費用監控，每次處理均會產出 Token 使用量與美金費用預估，確保 API 消費透明可控。
+系統內建實時費用監控，讓您在方案間優雅切換：
+*   **免費版 (Free)**：生成品質不變，但因 API 限制需排隊等待，適合不趕時間的深度研究。
+*   **付費版 (Paid)**：極速響應，且研究成本極低（平均每月僅約 $3 USD），適合高強度的專業產出。確保每一分錢都花在刀口上。
 
 ### 4. 故障自我修復 (Auto-Repair Architecture) ☁️
 具備 iCloud 佔位符智能識別、API 流量限制自動對沖與異步隊列管理。系統在不穩定的網路與雲端環境中依舊能保持硬化運行。
@@ -145,7 +147,9 @@ We refuse to feed raw "noise" into the AI. We use **Markdown-structured reports*
 Saves approximately 5 hours of manual processing daily, totaling 150 hours per month. Let AI handle the heavy lifting while you focus on final decision-making.
 
 ### 3. Cost Guardian 🛡️
-Built-in real-time cost monitoring. Every task logs precise token usage and USD cost estimations, ensuring transparent and controlled API spending.
+Built-in real-time cost monitoring helps you choose the best tier:
+*   **Free Tier**: Same high-quality output, but requires "waiting in line" due to rate limits. Ideal for non-urgent deep research.
+*   **Paid Tier**: Ultra-fast response with surprisingly low costs (avg. ~$3 USD/month). Built for high-intensity professional workflows. Every cent is accounted for in the logs.
 
 ### 4. Auto-Repair Architecture ☁️
 Features intelligent iCloud placeholder detection, API rate limit hedging, and asynchronous queue management. The system remains robust across unstable network and cloud environments.
