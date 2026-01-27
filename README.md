@@ -1,7 +1,7 @@
 # 🐿️ FlashSquirrel (閃電松鼠) - Automated Research Pipeline
 
-> **「感知即認知，讓知識自動代謝。」**  
-> *"Perception is Cognition. Let your knowledge metabolize automatically."*
+> **「閃電一擊，智慧入林。」**  
+> *"One Lightning Strike, A Forest of Wisdom."*
 
 [繁體中文](#繁體中文) | [English](#english)
 
