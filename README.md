@@ -31,7 +31,14 @@
 每天節省的手動處理時間約為 5 小時，每月累計節省約 150 小時。讓 AI 負責繁複的勞力，您負責最終的決策。
 
 ### 3. 金錢守護者 (Cost Guardian) 🛡️
-我們不只說便宜，我們算給你看。基於 **Gemini 2.0 Flash** 的真實費率：
+我們不只說便宜，我們算給你看。您可以根據需求自由選擇方案：
+
+| 方案 | 生成品質 | 等待時間 | 費用 | 特色 |
+| :--- | :--- | :--- | :--- | :--- |
+| **免費方案 (Free)** | **最高** | 較長 (需排隊) | **$0** | 系統內建「自動排隊」機制，掛著就能跑，0 成本無痛研究。 |
+| **付費方案 (Paid)** | **最高** | **極速** | 約 $1~$3 /月 | 隨點隨用，毫秒級響應，用一杯咖啡的錢買回一個月的自由。 |
+
+#### 📊 真實費率試算 (以 Gemini 2.0 Flash 為例)：
 
 | 項目 (以單份深度報告計) | 預估使用量 | 單位成本 (1M tokens) | 小計 |
 | :--- | :--- | :--- | :--- |
@@ -39,10 +46,8 @@
 | **輸出 (Output)** | 2,000 tokens | $0.40 | $0.0008 |
 | **單份研究總計** | - | - | **$0.0018 USD** |
 
-#### 📈 規模化運算 (如您每天處理 20 份報告)：
-*   **每日費用**：$0.0018 x 20 = **$0.036 USD** (約 1 元台幣)
-*   **每月費用**：$0.036 x 30 = **$1.08 USD** (約 35 元台幣)
-*   **結論**：即便考慮到長文檔與大規模搜索，每月預算設定在 **$3~$5 美金** 即可享受頂級的研究能力。
+*   **規模化運算**：即便每天處理 20 份報告，每月費用僅約 **$1.08 USD** (約 35 元台幣)。
+*   **結論**：無論免費或付費，FlashSquirrel 都會在後台幫您處理好排隊與更名，您只需要負責「投餵」即可。
 
 ### 4. 故障自我修復 (Auto-Repair Architecture) ☁️
 具備 iCloud 佔位符智能識別、API 流量限制自動對沖與異步隊列管理。系統在不穩定的網路與雲端環境中依舊能保持硬化運行。
@@ -156,7 +161,14 @@ We refuse to feed raw "noise" into the AI. We use **Markdown-structured reports*
 Saves approximately 5 hours of manual processing daily, totaling 150 hours per month. Let AI handle the heavy lifting while you focus on final decision-making.
 
 ### 3. Cost Guardian 🛡️
-We don't just claim it's cheap; we prove it. Using real **Gemini 2.0 Flash** rates:
+We don't just claim it's cheap; we prove it. Choose the plan that fits your pace:
+
+| Plan | Quality | Wait Time | Cost | Key Feature |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | **Best** | Longer (Queue) | **$0** | Built-in "Auto-Queuing"—set it and forget it for $0 research. |
+| **Paid Plan** | **Best** | **Ultra-Fast** | ~$1-$3 /mo | Millisecond responses; buy back your time for the price of a coffee. |
+
+#### 📊 Realistic Cost Breakdown (Gemini 2.0 Flash):
 
 | Item (Per Deep Report) | Est. Usage | Unit Cost (per 1M) | Subtotal |
 | :--- | :--- | :--- | :--- |
@@ -164,10 +176,8 @@ We don't just claim it's cheap; we prove it. Using real **Gemini 2.0 Flash** rat
 | **Output** | 2,000 tokens | $0.40 | $0.0008 |
 | **Total per Report** | - | - | **$0.0018 USD** |
 
-#### 📈 Scaled Usage (Scenario: 20 reports/day):
-*   **Daily Cost**: $0.0018 x 20 = **$0.036 USD**
-*   **Monthly Cost**: $0.036 x 30 = **$1.08 USD**
-*   **Verdict**: Even with massive documents, a **$3-$5 monthly budget** provides elite research capabilities. Qualitatively, it's virtually free compared to your time.
+*   **Scaled Usage**: Even at 20 reports/day, your monthly cost is only ~$1.08 USD.
+*   **Verdict**: Whether Free or Paid, FlashSquirrel handles all queuing and renaming in the background. You just feed the files.
 
 ### 4. Auto-Repair Architecture ☁️
 Features intelligent iCloud placeholder detection, API rate limit hedging, and asynchronous queue management. The system remains robust across unstable network and cloud environments.
