@@ -111,6 +111,17 @@ def setup_environment(api_key):
     ]
     
     root_p = Path(root_path)
+    
+    # macOS Permission Check (Full Disk Access)
+    if sys.platform == "darwin" and "CloudDocs" in root_path:
+        print("\n🍎 macOS Security Check:")
+        print("To access iCloud Drive folders, your Terminal needs 'Full Disk Access'.")
+        print("1. Open System Settings -> Privacy & Security -> Full Disk Access.")
+        print("2. Ensure 'Terminal' (or your IDE) is toggled ON.")
+        print("3. If you don't do this, the script might fail to see your files.")
+        input("\nPress Enter once you've checked this, or if you want to proceed anyway...")
+
+    print(f"\n🏗️  Initializing directory structure at: {root_path}")
     root_p.mkdir(parents=True, exist_ok=True)
     for p in paths:
         (root_p / p).mkdir(exist_ok=True)

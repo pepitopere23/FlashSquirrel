@@ -96,7 +96,7 @@ graph TD
 ## 🛠️ 三種使用路徑 (Three Usage Paths)
 
 ### 1. 純電腦使用者 (Desktop Only)
-1.  **建立資料夾**：在本地創建 `研究工作流/input_thoughts` 資料夾。
+1.  **自動生成**：首次執行 `start.py` 後，系統會自動在專案目錄下建立 `data/input_thoughts` 資料夾。
 2.  **管理素材**：將文件（PDF、照片）放入子資料夾，AI 將自動完成本地分析。
 
 ### 2. Apple 全家桶用戶 (Apple Ecosystem)
@@ -167,7 +167,7 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 ## 🛠️ Three Usage Paths
 
 ### 1. Desktop Only
-1.  **Create Folder**: Create a local `Research Workflow/input_thoughts` folder.
+1.  **Auto-Creation**: After running `start.py`, the system automatically creates the `data/input_thoughts` folder.
 2.  **Direct Drop**: Place your files into sub-folders. AI handles all analysis locally.
 
 ### 2. Apple Ecosystem (Full)
@@ -176,7 +176,7 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 
 ### 3. Windows & Cross-Platform
 1.  **Bridge**: Install **iCloud for Windows** or use **OneDrive/Google Drive**.
-2.  **Sync & Process**: Files synced from mobile to cloud are automatically handled by FlashSquirrel on Windows.
+2.  **Auto-Sync**: `start.py` handles folder creation. Once files sync from mobile to cloud, FlashSquirrel picks them up automatically.
 
 ---
 
