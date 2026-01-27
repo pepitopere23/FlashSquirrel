@@ -92,19 +92,19 @@ graph TD
     - 雙擊執行資料夾中的 `setup_wizard.py`，貼上您的金鑰並完成 Google 登入。
 3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案放入 iCloud 或任何同步資料夾中。
 
-## 🛠️ 三種「貼心」使用路徑 (Three Thoughtful Routes)
+## 🛠️ 三種使用路徑 (Three Usage Paths)
 
-### 路徑 A：純電腦使用者 (Desktop Only)
+### 1. 純電腦使用者 (Desktop Only)
 1.  **建立資料夾**：在本地創建 `研究工作流/input_thoughts` 資料夾。
-2.  **手動管理**：將文件（PDF、照片）放入子資料夾，AI 將在本地完成所有分析。
+2.  **管理素材**：將文件（PDF、照片）放入子資料夾，AI 將自動完成本地分析。
 
-### 路徑 B：Apple 全家桶用戶 (iOS + Mac)
-1.  **自動化**：使用我們的 [iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 捕捉內容。
-2.  **iCloud 同步**：手機拍照，Mac 自動在後台「閃電」執行並更名。
+### 2. Apple 全家桶用戶 (Apple Ecosystem)
+1.  **移動端捕捉**：使用 [iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 隨手記錄。
+2.  **iCloud 自動化**：手機上傳，Mac 在後台自動執行研發與更名。
 
-### 路徑 C：Windows + 安卓/iOS 組合 (Windows + Mobile)
-1.  **雲端媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive/Dropbox**。
-2.  **同步監控**：手機將檔案同步至指定雲端資料夾，FlashSquirrel 將在 Windows 上自動完成後續工作。
+### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
+1.  **同步媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive**。
+2.  **後台監控**：手機將檔案同步至雲端資料夾，FlashSquirrel 將在 Windows 上自動完成處理。
 
 ---
 
@@ -162,19 +162,19 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
     - Run `setup_wizard.py`, paste your key, and complete the Google login.
 3.  **Sync**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf).
 
-## 🛠️ Three Thoughtful Usage Scenarios
+## 🛠️ Three Usage Paths
 
-### Route A: Desktop-Only Users
+### 1. Desktop Only
 1.  **Create Folder**: Create a local `Research Workflow/input_thoughts` folder.
-2.  **Manual Drop**: Place your files into sub-folders. AI handles all analysis locally.
+2.  **Direct Drop**: Place your files into sub-folders. AI handles all analysis locally.
 
-### Route B: Full Apple Ecosystem (iOS + Mac)
-1.  **Automation**: Use our [iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) to capture content.
-2.  **iCloud Sync**: Capture on iPhone; analysis and folder renaming happen silently on your Mac.
+### 2. Apple Ecosystem (Full)
+1.  **Mobile Capture**: Use our [iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) for on-the-go recording.
+2.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
 
-### Route C: Windows + Android/iOS Combo
-1.  **Cloud Bridge**: Install **iCloud for Windows** or use **OneDrive/Dropbox**.
-2.  **Sync & Watch**: Sync files from your mobile to a designated cloud folder. FlashSquirrel automatically processes them on your Windows PC.
+### 3. Windows & Cross-Platform
+1.  **Bridge**: Install **iCloud for Windows** or use **OneDrive/Google Drive**.
+2.  **Sync & Process**: Files synced from mobile to cloud are automatically handled by FlashSquirrel on Windows.
 
 ---
 
