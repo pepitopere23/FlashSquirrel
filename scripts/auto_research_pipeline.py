@@ -417,17 +417,33 @@ class InputHandler(FileSystemEventHandler):
 
     def handle_event(self, file_path):
         rel_path = os.path.relpath(file_path, ROOT_DIR)
+        basename = os.path.basename(file_path)
         
+        # Skip internal system files
         if file_path.endswith(".py"): return
-        if "/" not in rel_path: return 
+        if basename.startswith('.'): return
+        if "report_" in basename or "visualizations_" in basename or "MASTER_SYNTHESIS" in basename: return
         
-        # Skip hidden/temp files
-        if os.path.basename(file_path).startswith('.'): return
-        
-        if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf')): return
-        if "report_" in file_path or "visualizations_" in file_path or "MASTER_SYNTHESIS" in file_path or "upload_package" in file_path: return
+        # Check extensions
+        if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): return
 
-        logging.info(f"⚡️ New Thought Detected: {rel_path} (Queued)")
+        # Topic Assignment Logic
+        # If it's in a subdirectory, the subdirectory is the topic.
+        # If it's in the root, it's a "General" thought (Shortcut-friendly).
+        if "/" not in rel_path:
+            logging.info(f"📍 Root-level thought detected: {basename}. Assigning to 'General' topic.")
+            # Move to a default 'input_thoughts/General' to keep the pipeline clean
+            general_dir = os.path.join(ROOT_DIR, "input_thoughts", "General")
+            os.makedirs(general_dir, exist_ok=True)
+            new_path = os.path.join(general_dir, basename)
+            try:
+                shutil.move(file_path, new_path)
+                file_path = new_path
+            except Exception as e:
+                logging.error(f"Failed to move root-level file: {e}")
+                return
+
+        logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
         self.processor.add_task(file_path)
 
 async def scan_existing_files(processor):
