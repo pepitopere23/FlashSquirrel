@@ -111,7 +111,8 @@ graph TD
 **適合：** 專業研究員、追求「掀開螢幕即完成」的極致體驗。
 1.  **啟動**：執行 `python scripts/setup_background.py`。
 2.  **體驗**：**完全沒有視窗**。松鼠會化為隱形守護進程，電腦開機即自動守護資料夾。
-3.  **優勢**：真正達成「手機丟檔案 -> 筆記本見」
+3.  **優勢**：真正達成「手機丟檔案 -> 筆記本見」的無感神蹟。
+4.  **⚠️ 重要權限**：背景執行時，若無開通「完全磁碟取用權限」，松鼠會直接「無聲失蹤」。請務必參考下方 FAQ 完成權限設定。
 
 ---
 
@@ -212,6 +213,7 @@ To fit different workflows, we offer two tiers of automation:
 1.  **Start**: Run `python scripts/setup_background.py`.
 2.  **Experience**: **Completely invisible**. FlashSquirrel becomes a background system service that guards your folders automatically upon login.
 3.  **Benefit**: Realize the "Mobile Drop -> NotebookLM" miracle with zero friction.
+4.  **⚠️ Mandatory Permission**: Background services will fail **SILENTLY** without "Full Disk Access". Please refer to the FAQ section below to finalize setup.
 
 ---
 

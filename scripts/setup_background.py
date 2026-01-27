@@ -43,6 +43,14 @@ def setup_mac():
     
     print(f"✅ Full-Auto enabled! FlashSquirrel will now run invisibly in the background.")
     print(f"   (Service file created at: {dest_path})")
+    print("\n" + "!"*60)
+    print("🍎 CRITICAL macOS PERMISSION REQUIRED:")
+    print("Because this runs in the background, it will fail SILENTLY if you don't")
+    print("grant 'Full Disk Access' to your Terminal/IDE.")
+    print("1. Go to System Settings -> Privacy & Security -> Full Disk Access.")
+    print("2. Ensure 'Terminal' is ON.")
+    print("3. Restart your Mac or log out/in to ensure the background service picks it up.")
+    print("!" * 60 + "\n")
 
 def setup_windows():
     print("🪟 Setting up Windows Task Scheduler...")
