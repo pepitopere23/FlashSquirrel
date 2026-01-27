@@ -1,5 +1,8 @@
 # 🐿️ FlashSquirrel (閃電松鼠) - Automated Research Pipeline
 
+> **「感知即認知，讓知識自動代謝。」**  
+> *"Perception is Cognition. Let your knowledge metabolize automatically."*
+
 [繁體中文](#繁體中文) | [English](#english)
 
 ---
@@ -22,10 +25,53 @@
 
 ---
 
+## 🛠️ 系統架構 (System Architecture)
+
+```mermaid
+graph TD
+    subgraph "Perception Layer (iPhone)"
+        A[User Input: Photo/Text] -->|Share Sheet| B(iOS Shortcut: Flash Research)
+        B -->|Decision| C{Menu Selection}
+        C -->|New Topic| D[Create Timestamp Folder]
+        C -->|Append| E[Find Latest Modified Folder]
+        D --> F[iCloud Drive]
+        E --> F
+    end
+
+    subgraph "Transport Layer (Cloud)"
+        F -->|Async Sync| G[MacOS iCloud Folder]
+    end
+
+    subgraph "Reasoning Layer (Mac Background)"
+        G -->|Watchdog Event| H[auto_research_pipeline.py]
+        H -->|API Call| I[Gemini 2.0 Flash]
+        I -->|Google Search| J[Grounding Verification]
+        J -->|Return| K[Markdown Report + Confidence Score]
+        K -->|Save to Disk| G
+        
+        G -->|Multi-file Trigger| L[Synthesis Engine]
+        L -->|Analyze| M[Generate Conflict Matrix]
+    end
+
+    subgraph "Action Layer (NotebookLM Loop)"
+        K -->|Trigger| N[notebooklm_automator.py]
+        N -->|Playwright| O[Chrome Headless]
+        O -->|Upload| P[Google NotebookLM]
+        P -->|AI Analysis| Q[Generate Topic Title]
+        Q -->|Capture Title| N
+        N -->|OS Rename| G
+        style G fill:#f9f,stroke:#333,stroke-width:2px
+    end
+```
+
+*(詳見 [系統架構手冊](./系統架構手冊.md))*
+
+---
+
 ## 🚀 快速開始 (Quick Start)
 
-### 👶 對於律師、研究員等非技術用戶
-**如果您不熟悉電腦開發環境，請按照以下步驟操作：**
+### 🏁 極簡安裝步驟
+**如果您希望以最快速度啟動閃電工作流，請按照以下步驟操作：**
 
 1.  **下載與解壓縮**：點擊右上角綠色按鈕 **"Code"** 並選擇 **"Download ZIP"**。
 2.  **一鍵配置大腦**：
@@ -71,8 +117,8 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 
 ## 🚀 Quick Start
 
-### 👶 For Lawyers, Researchers, and Students
-**If you are not comfortable with development environments, follow these steps:**
+### 🏁 Minimal Setup Steps
+**To launch your Flash Research workflow at light speed, follow these steps:**
 
 1.  **Download**: Click the green **"Code"** button above and select **"Download ZIP"**.
 2.  **Configure**:
