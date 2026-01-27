@@ -35,6 +35,47 @@
 *   **市場分析師**：每日需處理大量行業報告，並尋找其中的矛盾點與潛在趨勢。
 *   **硬核知識愛好者**：希望將零散的網頁剪輯與隨筆，自動整理成系統化的電子書或筆記。
 
+## 🛠️ 系統架構 (System Architecture)
+
+```mermaid
+graph TD
+    subgraph "Perception Layer (iPhone)"
+        A[User Input: Photo/Text] -->|Share Sheet| B(iOS Shortcut: Flash Research)
+        B -->|Decision| C{Menu Selection}
+        C -->|New Topic| D[Create Timestamp Folder]
+        C -->|Append| E[Find Latest Modified Folder]
+        D --> F[iCloud Drive]
+        E --> F
+    end
+
+    subgraph "Transport Layer (Cloud)"
+        F -->|Async Sync| G[MacOS iCloud Folder]
+    end
+
+    subgraph "Reasoning Layer (Mac Background)"
+        G -->|Watchdog Event| H[auto_research_pipeline.py]
+        H -->|API Call| I[Gemini 2.0 Flash]
+        I -->|Google Search| J[Grounding Verification]
+        J -->|Return| K[Markdown Report + Confidence Score]
+        K -->|Save to Disk| G
+        
+        G -->|Multi-file Trigger| L[Synthesis Engine]
+        L -->|Analyze| M[Generate Conflict Matrix]
+    end
+
+    subgraph "Action Layer (NotebookLM Loop)"
+        K -->|Trigger| N[notebooklm_automator.py]
+        N -->|Playwright| O[Chrome Headless]
+        O -->|Upload| P[Google NotebookLM]
+        P -->|AI Analysis| Q[Generate Topic Title]
+        Q -->|Capture Title| N
+        N -->|OS Rename| G
+        style G fill:#f9f,stroke:#333,stroke-width:2px
+    end
+```
+
+*(詳見 [系統架構手冊 (Architecture Manual)](./系統架構手冊.md))*
+
 ---
 
 ## 🛠️ 使用說明 (Usage)
@@ -73,7 +114,7 @@
 
 ## 🚀 快速開始 (Quick Start)
 
-1.  **環境準備**: Python 3.9+ & [Google AI Studio Key](https://aistudio.google.com/)。
+1.  **環境準備**: Python 3.9+ & [Google AI Studio (在此獲取免費 API Key)](https://aistudio.google.com/app/apikey)。
 2.  **執行設定**:
     ```bash
     python setup_wizard.py
@@ -115,7 +156,9 @@ We build a bridge. Use Gemini for **"Deep Research"** on your raw materials (sup
 
 ---
 
-## 🛠️ Usage Instructions
+## 🛠️ Usage Instructions (Architecture Above 👆)
+
+Designed with a "Modular Script" philosophy, allowing even non-technical users to start at light speed.
 
 Designed with a "Modular Script" philosophy, allowing even non-technical users to start at light speed.
 
@@ -151,7 +194,7 @@ This project is licensed under **AGPLv3** (GNU Affero General Public License v3)
 
 ## 🚀 Quick Start
 
-1.  **Preparation**: Python 3.9+ & [Google AI Studio Key](https://aistudio.google.com/)。
+1.  **Preparation**: Python 3.9+ & [Google AI Studio (Get your free API Key here)](https://aistudio.google.com/app/apikey)。
 2.  **Setup**:
     ```bash
     python setup_wizard.py
