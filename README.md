@@ -130,7 +130,7 @@ graph TD
 > [!IMPORTANT]
 > **💡 常見問題與技術說明 (FAQ & Tech Notes)**
 > *   **資料夾生成**：只要執行 `start.py` 並按下 **Enter**，系統就會自動在您的 iCloud 中變出完整結構。建議先手動建立「研究工作流」主目錄以供移動端即時存入。
-> *   **同步響應時間**：請確認 Mac 已開啟「完全磁碟取用權限」。iCloud 指令同步到電腦約需 5-30 秒之響應時間（視網路而定）。
+> *   **同步響應時間**：請確認您已開啟 **「完全磁碟取用權限 (Full Disk Access)」**（至系統設定 -> 隱私與安全性 -> 將「終端機 Terminal」勾選為開啟）。**設定完成後請重啟終端機視窗**。iCloud 指令同步至電腦約需 5-30 秒之響應時間。
 
 ### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
 1.  **同步媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive**。
@@ -230,7 +230,7 @@ To fit different workflows, we offer two tiers of automation:
 > [!IMPORTANT]
 > **💡 FAQ & Technical Notes**
 > *   **Folder Generation**: Simply run `start.py` and press **Enter**; the system will auto-generate the structure in your iCloud. We recommend creating the main "研究工作流" folder first for immediate mobile use.
-> *   **Sync Latency**: Ensure "Full Disk Access" is enabled on your Mac. iCloud sync typically has a 5-30s response time depending on network conditions.
+> *   **Sync Latency**: Ensure you have enabled **"Full Disk Access"** for your **Terminal** app (System Settings -> Privacy & Security). **Restart your Terminal after enabling this.** iCloud sync typically has a 5-30s response time.
 
 ### 3. Windows & Cross-Platform
 1.  **Bridge**: Install **iCloud for Windows** or use **OneDrive/Google Drive**.

@@ -29,7 +29,10 @@
 ### Q5: 我在 Mac 上明明丟了檔案，為什麼它一直說「找不到檔案」？
 **A**: 這是典型的 **「權限不足」** 問題。
 *   **原因**：macOS 為了保護您的個資，預設禁止程式讀取 iCloud 或桌面。
-*   **解決方案**：前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」，手動將 **Terminal** (或您使用的終端機軟體) 加入並開啟即可。
+*   **解決方案**：
+    1. 前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」。
+    2. 點擊「+」號或手動將 **Terminal (終端機)** 或您的 IDE（如 Cursor, VS Code）勾選為開啟。
+    3. **關鍵：設定完畢後，請徹底關閉並重啟您的終端機視窗。**
 
 ---
 
@@ -58,4 +61,7 @@
 ### Q5: I'm on a Mac and dropped files, but it says "File not found"?
 **A**: This is a classic **"Permissions"** issue.
 *   **Cause**: macOS limits app access to iCloud or Desktop by default.
-*   **Solution**: Go to "System Settings -> Privacy & Security -> Full Disk Access" and toggle ON for **Terminal**.
+*   **Solution**: 
+    1. Go to "System Settings -> Privacy & Security -> Full Disk Access".
+    2. Ensure **Terminal** (or your IDE like Cursor/VS Code) is toggled ON.
+    3. **Critical: After toggling, you must restart your Terminal application.**
