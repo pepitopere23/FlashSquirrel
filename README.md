@@ -90,7 +90,7 @@ graph TD
     - 去 [Google AI Studio (在此獲取免費 API Key)](https://aistudio.google.com/app/apikey) 拿一張通行證（API Key）。
     - 打開資料夾，雙擊執行 `setup_wizard.py` (Windows 用戶可直接將檔案拖入命令提示字元)。
     - **貼上 API Key**，然後按照畫面提示登入你的 Google 帳號（為了 NotebookLM）。
-3.  **手機同步**：[點此下載 iOS 快捷指令](https://www.icloud.com/shortcuts/YOUR_SHORTCUT_ID) (請將檔案丟入 iCloud 中的 `研究工作流` 資料夾)。
+3.  **手機同步**：[點此下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) (請將檔案丟入 iCloud 中的 `研究工作流` 資料夾)。
 
 ---
 
@@ -150,7 +150,7 @@ We build a bridge. Use Gemini for **"Deep Research"** on your raw materials (sup
     - Get your API Key from [Google AI Studio (Get your free API Key here)](https://aistudio.google.com/app/apikey).
     - Open the folder, run `setup_wizard.py` (Windows users can drag the file into Command Prompt).
     - **Paste your API Key** and follow the prompts to log in (for NotebookLM sync).
-3.  **Sync Mobile**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/YOUR_SHORTCUT_ID) (Drop files into the `Research Workflow` folder in iCloud).
+3.  **Sync Mobile**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) (Drop files into the `Research Workflow` folder in iCloud).
 
 ---
 

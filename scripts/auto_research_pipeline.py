@@ -119,6 +119,25 @@ class ResearchPipeline:
         if path.lower().endswith('.pdf'): return 'application/pdf'
         return 'text/plain'
 
+    def log_usage(self, model_name, response):
+        """Extracts and logs usage metadata for cost awareness."""
+        try:
+            usage = response.usage_metadata
+            input_tokens = usage.prompt_token_count
+            output_tokens = usage.candidates_token_count
+            total_tokens = usage.total_token_count
+            
+            # Estimates (2.0 Flash Pricing)
+            # $0.10 / 1M input, $0.40 / 1M output
+            estimated_cost = (input_tokens * 0.0000001) + (output_tokens * 0.0000004)
+            
+            logging.info(f"📊 [Usage] Model: {model_name} | Tokens: {input_tokens}i / {output_tokens}o / {total_tokens} total")
+            logging.info(f"💰 [Cost Estimate] ${estimated_cost:.5f} USD (approx.)")
+            return estimated_cost
+        except Exception as e:
+            logging.warning(f"Could not log usage: {e}")
+            return 0
+
     def generate_with_fallback(self, prompt, content_part=None, tools=None):
         """Try models in priority order with Exponential Backoff."""
         contents = [prompt]
@@ -142,6 +161,7 @@ class ResearchPipeline:
                         contents=contents,
                         config=config
                     )
+                    self.log_usage(model_name, response)
                     return response
                 except Exception as e:
                     error_msg = str(e)
