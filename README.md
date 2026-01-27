@@ -1,4 +1,4 @@
-# 🚀 Automated Research Pipeline (光速研究工作流)
+# 🐿️ FlashSquirrel (閃電松鼠) - Automated Research Pipeline
 
 > **"雲端大腦，本地手腳"** —— 讓 AI 幫你完成從「輸入靈感」到「知識歸檔」的最後一哩路。
 
@@ -26,39 +26,51 @@
 
 **結論**：用 3 美金買回 150 小時的生命，這是無限大的投資報酬率。
 
-### 3. 硬體民主化 (Hardware Democracy)
-不需購買昂貴的 M4 Max 或 NVIDIA 顯卡。
-*   **核心運算**：由 Google Cloud (Gemini) 承擔。
-*   **本地負載**：電腦只負責「傳令」，記憶體佔用僅約 50MB (相當於開一個 Chrome 分頁)。
-*   **最低需求**：只要能順暢播放 YouTube 1080p 的電腦 (Intel Mac/MBA) 即可勝任。
+---
+
+## 🛠️ 使用說明 (Usage)
+
+本工具採用「模組化腳本」設計，旨在讓不熟悉技術的用戶也能光速上手。
+
+### 1. 運行環境
+*   **系統支持**：Windows 或 macOS。
+*   **極簡配置**：用戶只需輸入自己的 `Gemini API KEY`。
+*   **自動化授權**：
+    - 腳本會自動彈出或引導抓取 `NotebookLM Cookie`。
+    - 針對不熟悉終端機 (Terminal) 權限的用戶，相關系統權限配置已盡可能整合在安裝腳本中。
+
+### 2. 傳輸與工作流
+*   **傳輸層**：macOS 用戶可直接利用 **iCloud Drive** 實現跨設備（iPhone -> Mac）傳輸。
+*   **自動化觸發**：
+    - 建立一個「研究工作流」資料夾。
+    - **動作**：只需創建一個子資料夾並將文件（PDF、照片、隨筆）丟進去。
+    - **產出**：系統自動生成「單點深度報告」與「跨文件交叉驗證/爭議矩陣」。
+*   **語義閉環**：系統會根據 NotebookLM 自動生成的筆記本名稱，回頭自動修改本地子資料夾名稱，實現全自動檔案整理。
 
 ---
 
-## 🛠️ 系統架構
+## ⚖️ 授權與企業使用 (License & Corporate)
 
-詳見 [系統架構手冊 (Architecture Manual)](./系統架構手冊.md)
+### 開源協議
+本專案採用 **AGPLv3** (GNU Affero General Public License v3) 協議開源。
 
-1.  **感知 (Perception)**: iPhone 捷徑一鍵捕捉 (PDF/Photo/Text)。
-2.  **傳輸 (Transport)**: iCloud Drive 靜默同步。
-3.  **推理 (Reasoning)**: Python 呼叫 Gemini 2.0 進行 17 層深度驗證與報告撰寫。
-4.  **歸檔 (Archiving)**: Playwright 自動化瀏覽器上傳至 NotebookLM。
+### 企業使用規範
+*   **事先說明**：企業如有商業使用需求或基於本專案開發產品（特別是涉及 Appigee V3 / AGL V3），請務必先與作者聯繫說明。
+*   **格式相容性**：
+    - 請確認您的系統是否可以轉換成 **NCP 格式**。
+    - 若無法轉換，請及時與作者溝通以尋求解決方案。
 
 ---
 
-## 🚀 快速開始
+## 🚀 快速開始 (Quick Start)
 
-1.  **環境準備**: 
-    - macOS (Intel/Silicon 皆可)
-    - Python 3.9+
-    - Google Cloud API Key
-2.  **安裝依賴**:
+1.  **環境準備**: Python 3.9+ & [Google AI Studio Key](https://aistudio.google.com/)。
+2.  **執行設定**:
     ```bash
-    pip install -r requirements.txt
+    python setup_wizard.py
     ```
-3.  **啟動系統**:
-    ```bash
-    ./scripts/run_pipeline.sh
-    ```
+    *(按照指令輸入 API Key 並登入 Google 帳號即可)*
+3.  **開始研究**: 將檔案放入 `input_thoughts/您的主題`。
 
 ---
 
