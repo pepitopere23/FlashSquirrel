@@ -28,8 +28,21 @@ from dotenv import load_dotenv
 
 # Configuration
 load_dotenv()
-# iCloud Drive Path
-ROOT_DIR = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
+
+# Cross-platform Root Directory handling
+# 1. Check if RESEARCH_ROOT_DIR is set in .env
+# 2. Fallback to Mac iCloud path if it exists
+# 3. Default to 'data' directory in the project root
+DEFAULT_MAC_ICLOUD = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
+ENV_ROOT = os.getenv("RESEARCH_ROOT_DIR")
+
+if ENV_ROOT:
+    ROOT_DIR = os.path.abspath(os.path.expanduser(ENV_ROOT))
+elif os.path.exists(DEFAULT_MAC_ICLOUD):
+    ROOT_DIR = DEFAULT_MAC_ICLOUD
+else:
+    # Default to a local 'data' folder in the project directory
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Setup Logging

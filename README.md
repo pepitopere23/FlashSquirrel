@@ -24,6 +24,17 @@
     *   Gemini API 費用：約 **$3 USD / 月**。
     *   你的時間：**0 秒**。
 
+### 3. 金錢守護者 (Cost Guardian) 🛡️ [NEW]
+系統內建實時費用監控，每次研究任務都會在日誌中輸出精準的 Token 使用量與美金費用預估。
+*   **超低成本**：使用 Gemini 2.0 Flash，處理 1,000 個檔案僅需約 $1~$2 USD。
+*   **透明可控**：不再擔心 API 費用爆炸，每一分錢都看得見。
+
+### 4. 工業級硬化 (Robust Architecture) ☁️ [NEW]
+針對開源環境與 iCloud 同步特性進行了深度優化：
+*   **iCloud 智能防護**：自動識別 `.icloud` 佔位符，耐心等待下載完成再進行處理，告別 Crash。
+*   **指數退避 (Exponential Backoff)**：智能應對 API 流量限制，避免 IP 被封。
+*   **異步處理隊列**：防止大量檔案湧入時卡死系統，優雅排隊處理。
+
 **結論**：用 3 美金買回 150 小時的生命，這是無限大的投資報酬率。
 
 ### 3. API 方案選擇 (API Tiers)
@@ -126,6 +137,17 @@ We build a bridge. Use Gemini for **"Deep Research"** on your raw materials (sup
 *   **Automated Cost**:
     *   Gemini API Cost: ~**$3 USD/month**.
     *   Your Time: **0 seconds**.
+
+### 3. Cost Guardian 🛡️ [NEW]
+Built-in real-time cost monitoring. Each task logs precise token usage and USD cost estimations.
+*   **Ultra-low Cost**: Powered by Gemini 2.0 Flash, processing 1,000 files costs only ~$1-$2 USD.
+*   **Transparency**: No more surprise bills; every cent is accounted for in the logs.
+
+### 4. Enterprise-Grade Robustness ☁️ [NEW]
+Deeply optimized for open-source environments and iCloud sync behavior:
+*   **iCloud Sync Protection**: Automatically detects and waits for `.icloud` placeholders.
+*   **Exponential Backoff**: Jittered retry logic to handle API rate limits gracefully.
+*   **Async Processing Queue**: Prevents system stalls by managing high-volume file bursts.
 
 **Conclusion**: Buying back 150 hours of your life for $3 is an infinite ROI.
 
