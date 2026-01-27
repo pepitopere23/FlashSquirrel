@@ -87,10 +87,9 @@ graph TD
 **如果您希望以最快速度啟動閃電工作流，請按照以下步驟操作：**
 
 1.  **下載與解壓縮**：點擊右上角綠色按鈕 **"Code"** 並選擇 **"Download ZIP"**。
-2.  **一鍵配置大腦**：
-    - 前往 [Google AI Studio 獲取 API Key](https://aistudio.google.com/app/apikey)。
-    - 雙擊執行資料夾中的 `setup_wizard.py`，貼上您的金鑰並完成 Google 登入。
-3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案放入 iCloud 或任何同步資料夾中。
+2.  **一鍵配置大腦**：雙擊執行 `setup_wizard.py`，貼上您的 API 金鑰並完成 Google 登入。
+3.  **啟動後台引擎**：執行 `scripts/run_pipeline.sh` (Mac) 或 `python scripts/auto_research_pipeline.py` (Windows)，讓松鼠開始巡邏資料夾。
+4.  **開始研究**：將檔案丟入 `input_thoughts` 資料夾中的子目錄，魔法就會發生！
 
 ## 🛠️ 三種使用路徑 (Three Usage Paths)
 
@@ -156,11 +155,10 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 ### 🏁 Minimal Setup Steps
 **To launch your Flash Research workflow at light speed, follow these steps:**
 
-1.  **Download**: Click the green **"Code"** button above and select **"Download ZIP"**.
-2.  **Configure**:
-    - Get your [Google AI Studio API Key here](https://aistudio.google.com/app/apikey).
-    - Run `setup_wizard.py`, paste your key, and complete the Google login.
-3.  **Sync**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf).
+1.  **Download & Extract**: Click the green **"Code"** button above and select **"Download ZIP"**.
+2.  **Configure**: Run `setup_wizard.py`, paste your API Key, and complete the Google login.
+3.  **Start the Engine**: Run `scripts/run_pipeline.sh` (Mac) or `python scripts/auto_research_pipeline.py` (Windows) to let the squirrel start guarding your folders.
+4.  **Start Research**: Drop your files into a sub-folder within `input_thoughts`, and the magic begins!
 
 ## 🛠️ Three Usage Paths
 
