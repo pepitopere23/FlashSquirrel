@@ -147,6 +147,7 @@ graph TD
 如果您是第一次使用，不用擔心任何設定。只要打開程式，讓閃電松鼠引導您：
 
 1.  **雙擊啟動**：在資料夾中找到 `start.py`，點兩下執行（或在終端機輸入 `python start.py`）。
+    *   **注意**：首次執行會自動下載必要的瀏覽器核心 (約 150MB)，畫面可能會停留 1-2 分鐘，請耐心等待松鼠工作。
 2.  **輸入鑰匙**：程式會問您要「API Key」。
     *   視窗會直接顯示一個網址，點進去登入 Google 帳號。
     *   按下「Create API Key」，然後把那個以 `AIza` 開頭的亂碼複製起來。
@@ -264,6 +265,7 @@ To fit different workflows, we offer two tiers of automation:
 First time exploring? Don't worry about any technical setup. Just open the app and let the Squirrel guide you:
 
 1.  **Double-Click Start**: Find `start.py` in the folder and double-click it. (Or run `python start.py` in your terminal).
+    *   **Note**: The first run will automatically download necessary browser binaries (~150MB). Please wait nicely for 1-2 minutes.
 2.  **Enter the Key**: Typically, you need a "Gemini API Key".
     *   The window will show you a link. Click it to log in to Google.
     *   Click "Create API Key", then copy the long string starting with `AIza...`.
