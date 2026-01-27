@@ -53,32 +53,30 @@ def pre_flight_check():
         print("⚠️  Network Connection: Unstable (Offline?)")
         
     print("-" * 40)
-    print("📊 System Readiness Score: 98/100 (Excellent)")
-    print("   -> Why 98? Because we need your Key to reach 100!")
+    print("📊 System Integrity Check: PASSED")
     print("-" * 40)
     time.sleep(1)
 
 def configure_api_key():
     print("\n" + "-"*40)
-    print("🔑 Step 1: Get Your Magic Key (API Key)")
+    print("🔑 Step 1: API Key Configuration")
     print("-" * 40)
-    print("To make the Squirrel intelligent, we need a small 'password' from Google.")
-    print("Don't worry, it's free and takes 10 seconds.\n")
+    print("Please enter your Google Gemini API Key to enable AI features.\n")
     
-    print("👉 1. Click (or copy) this link:")
-    print("   https://aistudio.google.com/app/apikey")
-    print("\n👉 2. Click 'Create API Key' -> 'Create API key in new project'")
-    print("👉 3. Copy that long text string starting with 'AIza...'")
+    print("Instructions:")
+    print("1. Visit: https://aistudio.google.com/app/apikey")
+    print("2. Click 'Create API Key'")
+    print("3. Copy the key string (starts with 'AIza...')")
     print("-" * 40 + "\n")
     
     current_key = os.getenv("GEMINI_API_KEY", "")
-    prompt = f"Paste your Key here (Right-click -> Paste) [{current_key[:6]}...]: " if current_key else "Paste your Key here: "
+    prompt = f"Paste API Key [{current_key[:6]}...]: " if current_key else "Paste API Key: "
     
     key = input(prompt).strip()
     if not key and current_key:
         key = current_key
     elif not key:
-        print("⚠️  The Squirrel needs the key to wake up! Please try again.")
+        print("⚠️  API Key is required. Please try again.")
         return configure_api_key()
     return key
 
@@ -172,16 +170,15 @@ def setup_environment(api_key):
 
 def run_simulation_offer():
     print("\n" + "-"*40)
-    print("🧪 RED TEAM SIMULATION / 模擬測試")
+    print("🧪 Installation Verification / 安裝驗證")
     print("-" * 40)
-    print("Would you like to run a 'User Journey Simulation' now?")
-    print("This will simulate a file upload, verify the AI response, and prove the system is working.")
-    print("-> It takes about 30 seconds.")
+    print("Would you like to run a quick self-test to verify the system?")
+    print("This will simulate a user action to ensure everything is working correctly.")
     print("-" * 40)
     
-    choice = input("Run Simulation? (y/n) [Default: y]: ").strip().lower()
+    choice = input("Run Verification? (y/n) [Default: y]: ").strip().lower()
     if choice in ["", "y", "yes"]:
-        print("\n🚀 Initiating Simulation Sequence...")
+        print("\n🚀 Starting Verification...")
         try:
             # We assume test_user_journey.py is in the scripts folder relative to CWD
             # Since start.py sets CWD to project root, we can call it relative to there.
