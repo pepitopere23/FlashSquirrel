@@ -552,9 +552,10 @@ class InputHandler(FileSystemEventHandler):
         # Topic Assignment Logic
         # If it's in a subdirectory, the subdirectory is the topic.
         # If it's in the root, it's a "General" thought (Shortcut-friendly).
+        # Topic Assignment Logic
+        # 1. Root Level -> Moves to 'input_thoughts/General'
         if "/" not in rel_path:
             logging.info(f"📍 Root-level thought detected: {basename}. Assigning to 'General' topic.")
-            # Move to a default 'input_thoughts/General' to keep the pipeline clean
             general_dir: str = os.path.join(ROOT_DIR, "input_thoughts", "General")
             os.makedirs(general_dir, exist_ok=True)
             new_path: str = os.path.join(general_dir, basename)
@@ -563,6 +564,26 @@ class InputHandler(FileSystemEventHandler):
                 file_path = new_path
             except Exception as e:
                 logging.error(f"Failed to move root-level file: {e}")
+                return
+        
+        # 2. Direct Inbox Level (e.g. input_thoughts/idea.txt) -> Pack into own folder
+        # This prevents renaming the entire 'input_thoughts' folder
+        parts = rel_path.split(os.sep)
+        if len(parts) == 2 and parts[0] == "input_thoughts":
+            stem = os.path.splitext(basename)[0]
+            # Sanitize stem for folder name
+            stem = "".join([c for c in stem if c.isalnum() or c in (" ", "_", "-")]).strip()
+            if not stem: stem = "Untitled_Research"
+            
+            logging.info(f"🃏 Inbox item detected: {basename}. Packing into dedicated folder: {stem}")
+            topic_dir: str = os.path.join(ROOT_DIR, "input_thoughts", stem)
+            os.makedirs(topic_dir, exist_ok=True)
+            new_path: str = os.path.join(topic_dir, basename)
+            try:
+                shutil.move(file_path, new_path)
+                file_path = new_path
+            except Exception as e:
+                logging.error(f"Failed to pack inbox file: {e}")
                 return
 
         logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
@@ -580,10 +601,11 @@ async def scan_existing_files(processor: AsyncProcessor) -> None:
     for root, dirs, files in os.walk(ROOT_DIR):
         for file in files:
             file_path: str = os.path.join(root, file)
-            if os.path.basename(file_path).startswith('.'): 
+            # Skip hidden files unless they are iCloud placeholders
+            if os.path.basename(file_path).startswith('.') and not file_path.endswith('.icloud'): 
                 continue
             
-            if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf')): 
+            if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): 
                 continue
             if "report_" in file or "visualizations_" in file or "MASTER_SYNTHESIS" in file or "upload_package" in file_path: 
                 continue

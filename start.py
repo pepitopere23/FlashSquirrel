@@ -41,8 +41,25 @@ def main() -> None:
         print("\n✅ Setup complete. Taking a quick breath...")
         time.sleep(2)
 
-    # 2. Start the Pipeline
-    print("🚀 Igniting the Research Engine...")
+    # 2. Offer "Full-Auto" Choice
+    print("\n" + "-"*40)
+    print("🤖 MODE SELECTION / 模式選擇")
+    print("1. [Full-Auto] Install Background Service / 安裝後台隱形守衛 (Recommended)")
+    print("   -> Runs automatically at startup. You don't need to open this again.")
+    print("2. [Semi-Auto] Run Once / 單次執行")
+    print("   -> Runs only while this window is open.")
+    print("-"*40)
+    
+    choice = input("Select Mode (1/2) [Default: 2]: ").strip()
+    
+    if choice == "1":
+        print("🚀 Setting up Full-Auto Mode...")
+        run_command(["scripts/setup_background.py"])
+        print("✅ Service Installed! You can close this window now.")
+        return # Exit because service will take over
+
+    # 3. Semi-Auto: Start the Pipeline Manually
+    print("🚀 Igniting the Research Engine (Manual Mode)...")
     
     pipeline_script: str = os.path.join("scripts", "auto_research_pipeline.py")
     if not os.path.exists(pipeline_script):

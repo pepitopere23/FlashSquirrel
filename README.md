@@ -151,9 +151,20 @@ graph TD
 > *   **資料夾生成**：只要執行 `start.py` 並按下 **Enter**，系統就會自動在您的 iCloud 中變出完整結構。建議先手動建立「研究工作流」主目錄以供移動端即時存入。
 > *   **同步響應時間**：請確認您已開啟 **「完全磁碟取用權限 (Full Disk Access)」**（至系統設定 -> 隱私與安全性 -> 將「終端機 Terminal」勾選為開啟）。**設定完成後請重啟終端機視窗**。iCloud 指令同步至電腦約需 5-30 秒之響應時間。
 
-### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
-1.  **同步媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive**。
-2.  **後台監控**：手機將檔案同步至雲端資料夾，FlashSquirrel 將在 Windows 上自動完成處理。
+### 3. Windows / Android / 跨平台用戶 (Universal Support)
+
+我們提供兩種模式，讓您自由選擇：
+
+#### 🚀 方案 A：全自動模式 (Full-Automatic) —— *推薦*
+適合希望「裝完即忘」、追求極致無感體驗的用戶。
+1.  **Windows 原生支援**：FlashSquirrel 內建了 Windows 專用的後台服務 (Task Scheduler)。只要執行 `python start.py` 並選擇安裝服務，系統會自動設定「開機即啟動」的隱形守衛。
+2.  **跨平台同步**：配合 OneDrive / Google Drive，手機丟檔，電腦自動在後台秒處理。
+
+#### 🕹️ 方案 B：半自動模式 (Semi-Automatic)
+適合希望完全掌控執行時機，或者偶爾才需要使用的用戶。
+1.  **不需安裝服務**：不需要設定開機啟動。
+2.  **隨點隨用**：當您想要整理研究時，只需手動打開終端機執行 `python start.py`。
+3.  **同樣強大**：只要程式開著，它的偵測與分析能力與全自動模式完全一樣強大。
 
 ---
 
