@@ -20,9 +20,14 @@ def print_banner():
 def check_dependencies():
     print("📦 Checking and installing dependencies...")
     try:
+        print("   -> Installing Python libraries...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        # Install playwright browsers
+        
+        print("\n   -> Downloading Browser Engine (Playwright Chromium)...")
+        print("      ⚠️  This is a large download (~150 MB). Please be patient.")
+        print("      (It might look stuck for a minute, but the Squirrel is working hard!)")
         subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
+        
         print("✅ Dependencies installed successfully.")
     except Exception as e:
         print(f"❌ Error installing dependencies: {e}")
