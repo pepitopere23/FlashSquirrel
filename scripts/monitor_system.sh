@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-PROJECT_DIR="/Users/chenpeijun/research_pipeline"
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LOG_FILE="$PROJECT_DIR/pipeline_bg.log"
 ENV_FILE="$PROJECT_DIR/.env"
 AUTH_FILE="$HOME/.notebooklm-mcp/auth.json"

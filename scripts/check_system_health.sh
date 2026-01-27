@@ -2,7 +2,7 @@
 
 # Configuration
 PLIST_LABEL="com.user.research_pipeline"
-LOG_FILE="/Users/chenpeijun/Desktop/研究工作流/pipeline_bg.log"
+LOG_FILE="$(cd "$(dirname "$0")/.." && pwd)/pipeline_bg.log"
 MAX_LOG_SIZE_MB=50
 
 echo "🏥 Starting System Health Check..."
