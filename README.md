@@ -127,6 +127,13 @@ graph TD
 3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
 4.  **自動化**：手機上傳，Mac 在後台自動執行研發與更名。
 
+> [!TIP]
+> **💡 貼心小問答 (Quick Q&A)**
+> *   **一定要手動創資料夾嗎？**  
+>     不用，只要您執行 `start.py` 並選擇預設路徑，系統會自動在您的 iCloud 中變出整個結構。但我們建議先創好「研究工作流」大資料夾，這樣您在外面用手機時才有地方可以丟。
+> *   **為什麼我手機丟了檔案，電腦沒反應？**  
+>     請確認 Mac 的「完全磁碟取用權限」已開啟。另外，iCloud 同步有時需要 30 秒左右的「飛翔時間」。
+
 ### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
 1.  **同步媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive**。
 2.  **後台監控**：手機將檔案同步至雲端資料夾，FlashSquirrel 將在 Windows 上自動完成處理。
@@ -221,6 +228,13 @@ To fit different workflows, we offer two tiers of automation:
 2.  **One-Word Start**: Run `python start.py` and select the iCloud path.
 3.  **Syncing**: [Download the iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) and share files (photos, web, PDFs) to that folder.
 4.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
+
+> [!TIP]
+> **💡 Thoughtful Q&A**
+> *   **Do I have to create folders manually?**  
+>     No. Running `start.py` will auto-generate the entire structure. However, we recommend creating the main "研究工作流" folder first so you have a place to save files from your iPhone immediately.
+> *   **Why is it not processing after I drop a file?**  
+>     Check your Mac's "Full Disk Access" permission. Also, remember that iCloud sync might take about 30 seconds to "fly" from your phone to your computer.
 
 ### 3. Windows & Cross-Platform
 1.  **Bridge**: Install **iCloud for Windows** or use **OneDrive/Google Drive**.
