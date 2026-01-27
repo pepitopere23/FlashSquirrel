@@ -31,7 +31,10 @@
 每天節省的手動處理時間約為 5 小時，每月累計節省約 150 小時。讓 AI 負責繁複的勞力，您負責最終的決策。
 
 ### 3. 金錢守護者 (Cost Guardian) 🛡️
-我們不只說便宜，我們算給你看。您可以根據需求自由選擇方案：
+> [!NOTE]
+> **軟體本身完全免費**：本系統為 100% 開源工具。唯一的成本來自於您「自行選擇」的 Google Gemini API 使用方案。
+
+我們不只說便宜，我們算給你看。您可以根據需求自由選擇 API 方案：
 
 | 方案 | 生成品質 | 等待時間 | 費用 | 特色 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -175,7 +178,10 @@ We refuse to feed raw "noise" into the AI. We use **Markdown-structured reports*
 Saves approximately 5 hours of manual processing daily, totaling 150 hours per month. Let AI handle the heavy lifting while you focus on final decision-making.
 
 ### 3. Cost Guardian 🛡️
-We don't just claim it's cheap; we prove it. Choose the plan that fits your pace:
+> [!NOTE]
+> **100% Free Software**: FlashSquirrel is an open-source tool with zero licensing fees. The only potential cost is the **Google Gemini API usage fee**, which depends entirely on the tier you choose.
+
+We don't just claim it's cheap; we show you the math. You can choose your API tier based on your needs:
 
 | Plan | Quality | Wait Time | Cost | Key Feature |
 | :--- | :--- | :--- | :--- | :--- |
