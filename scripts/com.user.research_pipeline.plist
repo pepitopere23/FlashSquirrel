@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.research_pipeline</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/chenpeijun/Desktop/研究工作流/.venv/bin/python3</string>
+        <string>/Users/chenpeijun/Desktop/研究工作流/scripts/auto_research_pipeline.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/chenpeijun/Desktop/研究工作流</string>
+    <key>StandardOutPath</key>
+    <string>/Users/chenpeijun/Desktop/研究工作流/pipeline_bg.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/chenpeijun/Desktop/研究工作流/pipeline_error.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>

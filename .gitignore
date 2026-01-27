@@ -1,0 +1,28 @@
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+build/
+dist/
+*.egg-info/
+
+# 🔑 Secrets & Auth (VERY IMPORTANT)
+.env
+auth.json
+*.log
+chrome_profile_notebooklm/
+
+# 📂 Local Data (Modules)
+# We don't want to upload your personal research data or raw thoughts
+input_thoughts/
+processed_reports/
+raw_thoughts/
+visualizations/
+研究工作流/
+data/
+
+# 🍏 macOS
+.DS_Store
+.AppleDouble
+.LSOverride
