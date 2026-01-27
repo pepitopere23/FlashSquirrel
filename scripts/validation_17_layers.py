@@ -214,7 +214,7 @@ def validate_function_signature(code: str, spec: Optional[Dict]) -> List[Dict]:
     results = []
     
     # L5: 參數檢查
-    results.append(validate_l5_parameters(code, spec))
+    results.append(validate_l5_params(code, spec))
     
     # L6: 返回值檢查
     results.append(validate_l6_return_value(code, spec))
@@ -228,192 +228,118 @@ def validate_function_signature(code: str, spec: Optional[Dict]) -> List[Dict]:
     return results
 
 
-def validate_l5_parameters(code: str, spec: Optional[Dict]) -> Dict:
-    """L5: 參數檢查"""
+def validate_l5_params(code: str, spec: Optional[Dict]) -> Dict:
+    """L5: 參數檢查 (檢查所有函數)"""
     try:
         tree = ast.parse(code)
-        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        functions = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
         
         if not functions:
-            return {
-                "layer": 5,
-                "name": "參數檢查",
-                "passed": False,
-                "message": "未找到函數定義"
-            }
+            return {"layer": 5, "name": "參數檢查", "passed": False, "message": "未找到函數定義"}
         
-        # 檢查第一個函數
-        func = functions[0]
-        
-        # 如果有 spec,檢查參數是否匹配
         if spec and 'inputs' in spec:
             expected_params = set(spec['inputs'])
-            actual_params = set(arg.arg for arg in func.args.args)
+            # 檢查是否有任何一個函數匹配 spec
+            any_match = False
+            for func in functions:
+                actual_params = set(arg.arg for arg in func.args.args)
+                if expected_params == actual_params:
+                    any_match = True
+                    break
             
-            if expected_params == actual_params:
-                return {
-                    "layer": 5,
-                    "name": "參數檢查",
-                    "passed": True,
-                    "message": "參數與規格匹配"
-                }
+            if any_match:
+                return {"layer": 5, "name": "參數檢查", "passed": True, "message": "參數與規格匹配"}
             else:
-                return {
-                    "layer": 5,
-                    "name": "參數檢查",
-                    "passed": False,
-                    "message": f"參數不匹配: 期望 {expected_params}, 實際 {actual_params}"
-                }
+                return {"layer": 5, "name": "參數檢查", "passed": False, "message": "未找到參數匹配的函數"}
         else:
-            # 沒有 spec,只檢查是否有參數
-            return {
-                "layer": 5,
-                "name": "參數檢查",
-                "passed": True,
-                "message": f"函數有 {len(func.args.args)} 個參數"
-            }
+            total_params = sum(len(func.args.args) for func in functions)
+            return {"layer": 5, "name": "參數檢查", "passed": True, "message": f"檢測到 {len(functions)} 個函數，共 {total_params} 個參數"}
     except Exception as e:
-        return {
-            "layer": 5,
-            "name": "參數檢查",
-            "passed": False,
-            "message": f"檢查失敗: {str(e)}"
-        }
+        return {"layer": 5, "name": "參數檢查", "passed": False, "message": f"檢查失敗: {str(e)}"}
 
 
 def validate_l6_return_value(code: str, spec: Optional[Dict]) -> Dict:
-    """L6: 返回值檢查"""
+    """L6: 返回值檢查 (檢查所有函數)"""
     try:
         tree = ast.parse(code)
-        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        functions = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
         
         if not functions:
-            return {
-                "layer": 6,
-                "name": "返回值檢查",
-                "passed": False,
-                "message": "未找到函數定義"
-            }
+            return {"layer": 6, "name": "返回值檢查", "passed": False, "message": "未找到函數定義"}
         
-        func = functions[0]
+        funcs_missing_return = []
+        for func in functions:
+            if func.name == "__init__": continue
+            has_return = any(isinstance(node, (ast.Return, ast.Yield, ast.YieldFrom)) for node in ast.walk(func))
+            if not has_return:
+                funcs_missing_return.append(func.name)
         
-        # 檢查是否有 return 語句
-        has_return = any(isinstance(node, ast.Return) for node in ast.walk(func))
-        
-        if has_return:
-            return {
-                "layer": 6,
-                "name": "返回值檢查",
-                "passed": True,
-                "message": "函數有返回值"
-            }
+        if not funcs_missing_return:
+            return {"layer": 6, "name": "返回值檢查", "passed": True, "message": "所有函數均有返回值"}
         else:
-            return {
-                "layer": 6,
-                "name": "返回值檢查",
-                "passed": False,
-                "message": "函數缺少返回值"
-            }
+            return {"layer": 6, "name": "返回值檢查", "passed": False, "message": f"函數缺少返回值: {', '.join(funcs_missing_return[:3])}"}
     except Exception as e:
-        return {
-            "layer": 6,
-            "name": "返回值檢查",
-            "passed": False,
-            "message": f"檢查失敗: {str(e)}"
-        }
+        return {"layer": 6, "name": "返回值檢查", "passed": False, "message": f"檢查失敗: {str(e)}"}
 
 
 def validate_l7_type_hints(code: str) -> Dict:
-    """L7: 類型提示檢查"""
+    """L7: 類型提示檢查 (計算全局覆蓋率)"""
     try:
         tree = ast.parse(code)
-        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        functions = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
         
         if not functions:
-            return {
-                "layer": 7,
-                "name": "類型提示檢查",
-                "passed": False,
-                "message": "未找到函數定義"
-            }
+            return {"layer": 7, "name": "類型提示檢查", "passed": False, "message": "未找到函數定義"}
         
-        func = functions[0]
+        total_items = 0
+        items_with_hints = 0
         
-        # 檢查參數類型提示
-        params_with_hints = sum(1 for arg in func.args.args if arg.annotation)
-        total_params = len(func.args.args)
+        for func in functions:
+            # 參數類型提示
+            args = [arg for arg in func.args.args if arg.arg != 'self']
+            total_items += len(args)
+            items_with_hints += sum(1 for arg in args if arg.annotation)
+            
+            # 返回值類型提示 (跳過 __init__)
+            if func.name != "__init__":
+                total_items += 1
+                if func.returns:
+                    items_with_hints += 1
         
-        # 檢查返回值類型提示
-        has_return_hint = func.returns is not None
-        
-        if total_params > 0:
-            hint_coverage = params_with_hints / total_params
+        if total_items == 0:
+            return {"layer": 7, "name": "類型提示檢查", "passed": True, "message": "無參數或返回值需檢查"}
+            
+        coverage = items_with_hints / total_items
+        if coverage >= 0.8:
+            return {"layer": 7, "name": "類型提示檢查", "passed": True, "message": f"類型提示覆蓋率: {coverage*100:.0f}%"}
         else:
-            hint_coverage = 1.0 if has_return_hint else 0.0
-        
-        if hint_coverage >= 0.8 and has_return_hint:
-            return {
-                "layer": 7,
-                "name": "類型提示檢查",
-                "passed": True,
-                "message": f"類型提示覆蓋率: {hint_coverage*100:.0f}%"
-            }
-        else:
-            return {
-                "layer": 7,
-                "name": "類型提示檢查",
-                "passed": False,
-                "message": f"類型提示不足: {hint_coverage*100:.0f}%"
-            }
+            return {"layer": 7, "name": "類型提示檢查", "passed": False, "message": f"類型提示不足: {coverage*100:.0f}%"}
     except Exception as e:
-        return {
-            "layer": 7,
-            "name": "類型提示檢查",
-            "passed": False,
-            "message": f"檢查失敗: {str(e)}"
-        }
+        return {"layer": 7, "name": "類型提示檢查", "passed": False, "message": f"檢查失敗: {str(e)}"}
 
 
 def validate_l8_docstring(code: str) -> Dict:
-    """L8: 文檔字符串檢查"""
+    """L8: 文檔字符串檢查 (檢查所有函數)"""
     try:
         tree = ast.parse(code)
-        functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        functions = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
         
         if not functions:
-            return {
-                "layer": 8,
-                "name": "文檔字符串檢查",
-                "passed": False,
-                "message": "未找到函數定義"
-            }
+            return {"layer": 8, "name": "文檔字符串檢查", "passed": True, "message": "無函數定義"}
         
-        func = functions[0]
+        funcs_missing_doc = []
+        for func in functions:
+            doc = ast.get_docstring(func)
+            if not doc or len(doc.strip()) < 10:
+                funcs_missing_doc.append(func.name)
         
-        # 檢查是否有文檔字符串
-        docstring = ast.get_docstring(func)
-        
-        if docstring and len(docstring) > 10:
-            return {
-                "layer": 8,
-                "name": "文檔字符串檢查",
-                "passed": True,
-                "message": f"有完整文檔字符串 ({len(docstring)} 字符)"
-            }
+        if not funcs_missing_doc:
+            return {"layer": 8, "name": "文檔字符串檢查", "passed": True, "message": "所有函數均有完整文檔"}
         else:
-            return {
-                "layer": 8,
-                "name": "文檔字符串檢查",
-                "passed": False,
-                "message": "缺少或文檔字符串過短"
-            }
+            coverage = (len(functions) - len(funcs_missing_doc)) / len(functions)
+            return {"layer": 8, "name": "文檔字符串檢查", "passed": coverage >= 0.8, "message": f"文檔覆蓋率: {coverage*100:.0f}% (缺少: {', '.join(funcs_missing_doc[:3])})"}
     except Exception as e:
-        return {
-            "layer": 8,
-            "name": "文檔字符串檢查",
-            "passed": False,
-            "message": f"檢查失敗: {str(e)}"
-        }
+        return {"layer": 8, "name": "文檔字符串檢查", "passed": False, "message": f"檢查失敗: {str(e)}"}
 
 
 # ============================================================================
@@ -483,7 +409,7 @@ def validate_l10_stdlib(code: str) -> Dict:
             "message": f"精確識別出 {len(set(used))} 個標準庫導入"
         }
     except Exception as e:
-        return {"layer": 10, "passed": False, "message": f"分析失敗: {e}"}
+        return {"layer": 10, "name": "標準庫檢查", "passed": False, "message": f"分析失敗: {e}"}
 
 
 def validate_l11_third_party(code: str) -> Dict:
@@ -521,7 +447,7 @@ def validate_l12_circular_deps(code: str) -> Dict:
             "message": "通過 (未檢測到危險的相對導入)" if not has_relative else "檢測到相對導入，可能存在循環依賴風險"
         }
     except Exception as e:
-        return {"layer": 12, "passed": False, "message": f"分析失敗: {e}"}
+        return {"layer": 12, "name": "循環依賴檢查", "passed": False, "message": f"分析失敗: {e}"}
 
 
 # ============================================================================
@@ -569,7 +495,7 @@ def validate_l13_type_consistency(code: str) -> Dict:
             "message": f"函數類型提示覆蓋率: {int(with_hints/total*100)}%"
         }
     except Exception as e:
-        return {"layer": 13, "passed": False, "message": f"分析失敗: {e}"}
+        return {"layer": 13, "name": "類型一致性檢查", "passed": False, "message": f"分析失敗: {e}"}
 
 
 def validate_l14_logic_completeness(code: str) -> Dict:

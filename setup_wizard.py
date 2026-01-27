@@ -66,14 +66,12 @@ def capture_cookies():
             
             print("⏳ Waiting for you to log in... (Timeout in 5 minutes)")
             
-            # Wait for a selector that only appears after login, e.g., the user profile or "New Notebook"
+            # Wait for any indicator of a logged-in state
             try:
-                page.wait_for_selector("text=New Notebook", timeout=300000)
+                # English or Chinese "New Notebook" indicators
+                page.wait_for_selector("button:has-text('New Notebook'), button:has-text('建立新的筆記本'), .c6", timeout=300000)
             except:
-                try:
-                    page.wait_for_selector("text=建立新的筆記本", timeout=1000)
-                except:
-                    print("⚠️ Login timeout or browser closed. Proceeding with captured cookies if possible...")
+                print("⚠️ Login indicator not found. Proceeding with captured cookies if possible...")
             
             cookies = context.cookies()
             auth_data = {"cookies": cookies}

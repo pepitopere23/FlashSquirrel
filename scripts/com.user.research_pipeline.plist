@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.user.research_pipeline</string>
+    <string>com.flashsquirrel.agent</string>
     <key>ProgramArguments</key>
     <array>
         <string>/Users/YOUR_USERNAME/YOUR_PATH_TO_FLASHSQUIRREL/.venv/bin/python3</string>

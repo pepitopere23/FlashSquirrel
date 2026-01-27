@@ -17,31 +17,36 @@ def setup_mac():
         print("❌ Error: scripts/com.user.research_pipeline.plist not found.")
         return
 
-    dest_path = Path.home() / "Library/LaunchAgents/com.user.flashsquirrel.plist"
+    dest_path = Path.home() / "Library/LaunchAgents/com.flashsquirrel.agent.plist"
     
     # Read template and fill in paths
     with open(plist_template, "r") as f:
         content = f.read()
     
     # Get current paths
-    project_root = str(Path(os.getcwd()).absolute())
+    project_root = os.getcwd()
     python_path = sys.executable
     username = os.getlogin()
     
+    # Precise replacement to avoid double paths
+    content = content.replace("/Users/YOUR_USERNAME/YOUR_PATH_TO_FLASHSQUIRREL/.venv/bin/python3", python_path)
     content = content.replace("/Users/YOUR_USERNAME/YOUR_PATH_TO_FLASHSQUIRREL", project_root)
-    # The template might have specific placeholders we need to be careful with
     content = content.replace("YOUR_USERNAME", username)
-    # Ensure it uses the correct current python
-    content = content.replace(".venv/bin/python3", python_path)
 
     with open(dest_path, "w") as f:
         f.write(content)
     
-    # Load the agent
+    # Load the agent specifically for the current user session
     subprocess.run(["launchctl", "unload", str(dest_path)], capture_output=True)
-    subprocess.run(["launchctl", "load", str(dest_path)])
+    subprocess.run(["launchctl", "load", "-w", str(dest_path)], capture_output=True)
     
-    print(f"✅ Full-Auto enabled! FlashSquirrel will now run invisibly in the background.")
+    # Verification using the exact label in the plist
+    check_result = subprocess.run(["launchctl", "list", "com.flashsquirrel.agent"], capture_output=True)
+    if check_result.returncode == 0:
+        print(f"✅ Full-Auto enabled! FlashSquirrel is verified and running in the background.")
+    else:
+        print(f"⚠️ Service created but not yet active. (Wait for login or check permissions)")
+
     print(f"   (Service file created at: {dest_path})")
     print("\n" + "!"*60)
     print("🍎 CRITICAL macOS PERMISSION REQUIRED:")

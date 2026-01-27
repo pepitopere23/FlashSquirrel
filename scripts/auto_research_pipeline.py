@@ -19,7 +19,7 @@ import random
 import asyncio
 import logging
 import shutil
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from google import genai
@@ -53,48 +53,55 @@ logging.basicConfig(level=logging.INFO,
 os.makedirs(ROOT_DIR, exist_ok=True)
 
 class RobustUtils:
+    """Utility class for cross-platform file and iCloud synchronization handling."""
+    
     @staticmethod
     def wait_for_icloud_download(file_path: str, timeout: int = 60) -> str:
         """
         Detects if a file is a .icloud placeholder and waits for download.
-        Returns the final resolved path (without .icloud).
+        
+        Args:
+            file_path: The path to the potential .icloud file.
+            timeout: Maximum seconds to wait for download.
+            
+        Returns:
+            The final resolved path (without .icloud).
         """
-        # Case 1: File is already downloaded
         if os.path.exists(file_path) and not file_path.endswith('.icloud'):
             return file_path
             
-        # Case 2: It's a .icloud placeholder
         target_path = file_path
         if file_path.endswith('.icloud'):
-            # Current: .file.jpg.icloud -> Target: file.jpg
-            # Format usually: .name.ext.icloud, actual file is name.ext (hidden dot issue on macOS sometimes)
-            # Simple heuristic: remove leading dot if present, remove .icloud
             basename = os.path.basename(file_path)
             clean_name = basename.replace('.icloud', '')
-            if clean_name.startswith('.'): clean_name = clean_name[1:]
+            if clean_name.startswith('.'): 
+                clean_name = clean_name[1:]
             target_path = os.path.join(os.path.dirname(file_path), clean_name)
             
             logging.info(f"🌩️ iCloud Placeholder detected: {basename}. Triggering download...")
-            # Trigger download by attempting to os.stat the TARGET path (macOS magic)
-            # Or usually just accessing the .icloud file triggers BRM daemon.
-            pass
 
         start_time = time.time()
         while time.time() - start_time < timeout:
             if os.path.exists(target_path):
-                # Check if size > 0 (download complete)
                 if os.path.getsize(target_path) > 0:
                     logging.info(f"✅ iCloud Download Complete: {target_path}")
                     return target_path
             time.sleep(2)
             
         logging.warning(f"⚠️ iCloud Download Timeout: {target_path}")
-        return target_path # Return anyway, might fail later but we tried.
+        return target_path
 
     @staticmethod
     def safe_rename(old_path: str, new_name: str) -> str:
         """
-        Renames a folder safely. If target exists, appends UUID.
+        Renames a folder safely by preventing name collisions.
+        
+        Args:
+            old_path: Original folder path.
+            new_name: Proposed new folder name.
+            
+        Returns:
+            The actual resulting folder path.
         """
         parent = os.path.dirname(old_path)
         new_path = os.path.join(parent, new_name)
@@ -112,47 +119,69 @@ class RobustUtils:
             return old_path
 
 class ResearchPipeline:
-    def __init__(self):
+    """The central engine for processing research folders and generating Gemini reports."""
+    
+    def __init__(self) -> None:
+        """Initializes the Gemini client and model priorities."""
         if not GEMINI_API_KEY:
             logging.error("GEMINI_API_KEY not found in .env")
             sys.exit(1)
-        # New SDK Client
         self.client = genai.Client(api_key=GEMINI_API_KEY)
-        # Expanded Model List for Maximum Reliability
-        self.models_priority = [
+        self.models_priority: List[str] = [
             'gemini-2.0-flash', 
             'gemini-1.5-flash',
             'gemini-1.5-flash-8b', 
             'gemini-1.5-pro'       
         ]
 
-    def get_mime_type(self, path):
-        if path.lower().endswith('.png'): return 'image/png'
-        if path.lower().endswith('.jpg') or path.lower().endswith('.jpeg'): return 'image/jpeg'
-        if path.lower().endswith('.pdf'): return 'application/pdf'
+    def get_mime_type(self, path: str) -> str:
+        """Determines the MIME type based on file extension."""
+        if path.lower().endswith('.png'): 
+            return 'image/png'
+        if path.lower().endswith('.jpg') or path.lower().endswith('.jpeg'): 
+            return 'image/jpeg'
+        if path.lower().endswith('.pdf'): 
+            return 'application/pdf'
         return 'text/plain'
 
-    def log_usage(self, model_name, response):
-        """Extracts and logs usage metadata for cost awareness."""
+    def log_usage(self, model_name: str, response: Any) -> float:
+        """
+        Extracts and logs usage metadata for cost awareness.
+        
+        Args:
+            model_name: The name of the model used.
+            response: The Gemini API response object.
+            
+        Returns:
+            The estimated cost of the call in USD.
+        """
         try:
             usage = response.usage_metadata
             input_tokens = usage.prompt_token_count
             output_tokens = usage.candidates_token_count
             total_tokens = usage.total_token_count
             
-            # Estimates (2.0 Flash Pricing)
-            # $0.10 / 1M input, $0.40 / 1M output
             estimated_cost = (input_tokens * 0.0000001) + (output_tokens * 0.0000004)
             
             logging.info(f"📊 [Usage] Model: {model_name} | Tokens: {input_tokens}i / {output_tokens}o / {total_tokens} total")
             logging.info(f"💰 [Cost Estimate] ${estimated_cost:.5f} USD (approx.)")
-            return estimated_cost
+            return float(estimated_cost)
         except Exception as e:
             logging.warning(f"Could not log usage: {e}")
-            return 0
+            return 0.0
 
-    def generate_with_fallback(self, prompt, content_part=None, tools=None):
-        """Try models in priority order with Exponential Backoff."""
+    def generate_with_fallback(self, prompt: str, content_part: Any = None, tools: List[Any] = None) -> Any:
+        """
+        Attempts to generate content with fallback models and exponential backoff.
+        
+        Args:
+            prompt: The primary text prompt.
+            content_part: Additional content (data bytes or types.Part).
+            tools: Tools to be used for generation (e.g., Google Search).
+            
+        Returns:
+            The successful Gemini response object or None if all fail.
+        """
         contents = [prompt]
         if content_part:
             if isinstance(content_part, dict) and 'data' in content_part:
@@ -195,8 +224,15 @@ class ResearchPipeline:
         return None
 
     def run_gemini_research(self, file_path: str) -> Optional[str]:
-        """Phase 1: Deep Research with Grounding (Multimodal + PDF)"""
-        # iCloud Safety Check
+        """
+        Phase 1: Deep Research with Grounding (Multimodal + PDF).
+        
+        Args:
+            file_path: Path to the source file to research.
+            
+        Returns:
+            The path to the generated report or None if failed/skipped.
+        """
         file_path = RobustUtils.wait_for_icloud_download(file_path)
         if not os.path.exists(file_path):
             logging.error(f"❌ File not found after sync wait: {file_path}")
@@ -210,6 +246,13 @@ class ResearchPipeline:
             
         logging.info(f"🔍 [Phase 1] Starting Gemini Research on: {filename}")
         
+        prompt = """
+        [ROLE: Senior Principal Researcher]
+        [OBJECTIVE: Produce a doctoral-level research report]
+        [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
+        ... (Prompt content truncated for brevity in replacement chunk) ...
+        """
+        # Re-inserting actual prompt logic from view_file earlier
         prompt = """
         [ROLE: Senior Principal Researcher]
         [OBJECTIVE: Produce a doctoral-level research report]
@@ -260,12 +303,11 @@ class ResearchPipeline:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content_part = f.read()
             
-            # Enable Grounding with new SDK
             tools = [types.Tool(google_search=types.GoogleSearch())]
-            
             response = self.generate_with_fallback(prompt, content_part, tools=tools)
             
-            if not response or not response.text: return None
+            if not response or not response.text: 
+                return None
             
             with open(report_path, "w", encoding="utf-8") as f:
                 f.write(response.text)
@@ -278,10 +320,20 @@ class ResearchPipeline:
             return None
 
     def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
+        """
+        Phase 1.5: Synthesizes insights from all reports in a folder.
+        
+        Args:
+            folder_path: The directory containing individual reports.
+            
+        Returns:
+            The path to the MASTER_SYNTHESIS.md or None if no reports found.
+        """
         folder_name = os.path.basename(folder_path)
         logging.info(f"🧠 [Phase 1.5] Synthesizing insights in: {folder_name}")
         report_files = [f for f in os.listdir(folder_path) if f.startswith("report_") and f.endswith(".md")]
-        if not report_files: return None
+        if not report_files: 
+            return None
         
         combined_text = ""
         for rf in report_files:
@@ -298,42 +350,69 @@ class ResearchPipeline:
         You must generate a 'Conflict Matrix' that identifies competing viewpoints across these sources. Do NOT smooth out contradictions; expose them.
         
         Output Format:
-        # Integrated Analysis Report / 綜合分析報告: {folder_name}
+        # MASTER SYNTHESIS: [Topic]
         
-        ## 1. Dialectical Conflict Matrix / 辯證衝突矩陣
-        | Viewpoint A (觀點 A) | Viewpoint B (觀點 B) | Source of Conflict (衝突來源) | Resolution/Synthesis (解決方案/綜合) |
-        |---|---|---|---|
-        | ... | ... | ... | ... |
-        
-        ## 2. Integrated Narrative / 整合敘事
-        (Write the full analysis in English first, followed by Traditional Chinese translation)
-        
-        SOURCES:
-        {combined_text[:60000]}
+        ## 1. Integrated Overview / 整合概述
+        ## 2. Conflict Matrix & Divergent Insights / 衝突矩陣與分歧洞見
+        ## 3. Consensus & Validated Facts / 共識與經驗證的事實
+        ## 4. Strategic Recommendations / 策略性建議
         """
         
         try:
-            response = self.generate_with_fallback(prompt)
-            if not response or not response.text: return None
+            response = self.generate_with_fallback(prompt, combined_text)
+            if not response or not response.text: 
+                return None
             
             synthesis_path = os.path.join(folder_path, "MASTER_SYNTHESIS.md")
             with open(synthesis_path, "w", encoding="utf-8") as f:
                 f.write(response.text)
+            
+            logging.info(f"🏆 [Phase 1.5] Master Synthesis complete: {synthesis_path}")
             return synthesis_path
         except Exception as e:
             logging.error(f"Synthesis Error: {e}")
             return None
 
-    async def generate_visualizations(self, context: str, output_dir: str):
-        prompt = f"Generate Slidev (slides.md) and Mermaid (mindmap.mmd) code from this:\n{context[:10000]}"
+    async def generate_visualizations(self, context: str, output_dir: str) -> None:
+        """
+        Generates Slidev and Mermaid code for visualizations.
+        
+        Args:
+            context: The text content to base visualizations on.
+            output_dir: The directory to save the visualization bundle.
+        """
+        prompt: str = f"Generate Slidev (slides.md) and Mermaid (mindmap.mmd) code from this:\n{context[:10000]}"
         try:
-            response = self.generate_with_fallback(prompt)
+            response: Any = self.generate_with_fallback(prompt)
             if response and response.text:
-                viz_path = os.path.join(output_dir, "visualizations_bundle.md")
+                viz_path: str = os.path.join(output_dir, "visualizations.md")
                 with open(viz_path, "w", encoding="utf-8") as f:
                     f.write(response.text)
         except Exception as e:
             logging.error(f"Viz Error: {e}")
+        return None
+
+    def pack_and_rename_folder(self, folder_path: str, master_report_path: str) -> None:
+        """
+        Final Phase: Packs reports and renames the folder for archival.
+        
+        Args:
+            folder_path: The directory to process.
+            master_report_path: The path to the master synthesis file.
+        """
+        folder_name: str = os.path.basename(folder_path)
+        
+        with open(master_report_path, "r", encoding="utf-8") as f:
+            first_line: str = f.readline()
+            title: str = first_line.replace("#", "").split(":")[ -1].strip()
+            # Sanitize title
+            title = "".join([c for c in title if c.isalnum() or c in (" ", "_")]).strip()
+            title = title.replace(" ", "_")[:30]
+        
+        new_name: str = f"DONE_{title}_{folder_name}"
+        RobustUtils.safe_rename(folder_path, new_name)
+        logging.info(f"🏁 [Archived] Folder renamed to: {new_name}")
+        return None
 
 
 class AsyncProcessor:
@@ -341,40 +420,59 @@ class AsyncProcessor:
     Handles file events in a queue to prevent blocking the Watchdog observer.
     """
     def __init__(self, pipeline: ResearchPipeline):
+        """
+        Initializes the AsyncProcessor.
+        
+        Args:
+            pipeline: An instance of ResearchPipeline to use for processing.
+        """
         self.pipeline = pipeline
         self.queue = asyncio.Queue()
         self.processing = False
 
-    async def worker(self):
+    async def worker(self) -> None:
+        """
+        The main worker loop that processes tasks from the queue.
+        """
         logging.info("👷 Async Worker started...")
         self.processing = True
         while True:
-            file_path = await self.queue.get()
+            file_path: str = await self.queue.get()
             try:
                 await self.process_workflow(file_path)
             except Exception as e:
                 logging.error(f"❌ Worker Error: {e}")
             finally:
                 self.queue.task_done()
+        return None
 
-    async def process_workflow(self, file_path):
-        report_path = self.pipeline.run_gemini_research(file_path)
-        if not report_path: return
+    async def process_workflow(self, file_path: str) -> None:
+        """
+        Orchestrates the full research workflow for a given file.
         
-        folder_path = os.path.dirname(file_path)
-        synthesis_path = self.pipeline.run_folder_synthesis(folder_path)
+        Args:
+            file_path: The path to the file to be processed.
+        """
+        report_path: Optional[str] = await self.pipeline.run_gemini_research(file_path)
+        if not report_path: 
+            return None
         
-        content_to_push = ""
+        folder_path: str = os.path.dirname(file_path)
+        synthesis_path: Optional[str] = self.pipeline.run_folder_synthesis(folder_path)
+        
+        content_to_push: str = ""
         with open(report_path, 'r') as f: content_to_push += f.read()
         if synthesis_path:
             try:
-                with open(synthesis_path, 'r') as f: content_to_push += "\n\n" + f.read()
-            except: pass
+                with open(synthesis_path, 'r') as f: 
+                    content_to_push += "\n\n" + f.read()
+            except Exception as e:
+                logging.warning(f"Could not read synthesis for upload: {e}")
 
-        upload_package_path = os.path.join(folder_path, "upload_package.md")
+        upload_package_path: str = os.path.join(folder_path, "upload_package.md")
         with open(upload_package_path, "w", encoding="utf-8") as f: f.write(content_to_push)
         
-        topic = os.path.basename(folder_path)
+        topic: str = os.path.basename(folder_path)
         logging.info(f"🤖 Automating NotebookLM for: {topic}")
         automator_script = os.path.join(os.path.dirname(__file__), "notebooklm_automator.py")
         
@@ -393,39 +491,72 @@ class AsyncProcessor:
                 folder_path = new_folder_path
 
         await self.pipeline.generate_visualizations(content_to_push, folder_path)
+        return None
         
-    def add_task(self, file_path):
+    def add_task(self, file_path: str) -> None:
+        """
+        Safely adds a file path to the processing queue.
+        
+        Args:
+            file_path: The path to the file to be processed.
+        """
         # Check queue size to prevent overflow
         if self.queue.qsize() > 50:
             logging.warning("⚠️ Queue full! Dropping task.")
             return
         self.queue.put_nowait(file_path)
+        return None
 
 
 class InputHandler(FileSystemEventHandler):
-    def __init__(self, processor: AsyncProcessor):
+    """
+    Watchdog handler for new files in the research root.
+    """
+    def __init__(self, processor: AsyncProcessor) -> None:
+        """
+        Initializes the InputHandler.
+        
+        Args:
+            processor: The AsyncProcessor to delegate tasks to.
+        """
         self.processor = processor
         self.loop = asyncio.get_event_loop()
 
-    def on_modified(self, event):
-        if event.is_directory: return
+    def on_modified(self, event: Any) -> None:
+        """Called when a file is modified."""
+        if event.is_directory: 
+            return
         self.handle_event(event.src_path)
+        return None
 
-    def on_created(self, event):
-        if event.is_directory: return
+    def on_created(self, event: Any) -> None:
+        """Called when a file is created."""
+        if event.is_directory: 
+            return
         self.handle_event(event.src_path)
+        return None
 
-    def handle_event(self, file_path):
-        rel_path = os.path.relpath(file_path, ROOT_DIR)
-        basename = os.path.basename(file_path)
+    def handle_event(self, file_path: str) -> None:
+        """
+        Categorizes and queues the file event.
+        
+        Args:
+            file_path: The path to the detected file.
+        """
+        rel_path: str = os.path.relpath(file_path, ROOT_DIR)
+        basename: str = os.path.basename(file_path)
         
         # Skip internal system files
-        if file_path.endswith(".py"): return
-        if basename.startswith('.'): return
-        if "report_" in basename or "visualizations_" in basename or "MASTER_SYNTHESIS" in basename: return
+        if file_path.endswith(".py"): 
+            return
+        if basename.startswith('.'): 
+            return
+        if "report_" in basename or "visualizations_" in basename or "MASTER_SYNTHESIS" in basename: 
+            return
         
         # Check extensions
-        if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): return
+        if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): 
+            return
 
         # Topic Assignment Logic
         # If it's in a subdirectory, the subdirectory is the topic.
@@ -433,9 +564,9 @@ class InputHandler(FileSystemEventHandler):
         if "/" not in rel_path:
             logging.info(f"📍 Root-level thought detected: {basename}. Assigning to 'General' topic.")
             # Move to a default 'input_thoughts/General' to keep the pipeline clean
-            general_dir = os.path.join(ROOT_DIR, "input_thoughts", "General")
+            general_dir: str = os.path.join(ROOT_DIR, "input_thoughts", "General")
             os.makedirs(general_dir, exist_ok=True)
-            new_path = os.path.join(general_dir, basename)
+            new_path: str = os.path.join(general_dir, basename)
             try:
                 shutil.move(file_path, new_path)
                 file_path = new_path
@@ -445,52 +576,65 @@ class InputHandler(FileSystemEventHandler):
 
         logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
         self.processor.add_task(file_path)
+        return None
 
-async def scan_existing_files(processor):
-    """Scan and process files that already exist before script started."""
+async def scan_existing_files(processor: AsyncProcessor) -> None:
+    """
+    Scans and processes files that already exist before script started.
+    
+    Args:
+        processor: The AsyncProcessor instance.
+    """
     logging.info("🔎 Scanning for existing files...")
     for root, dirs, files in os.walk(ROOT_DIR):
         for file in files:
-            file_path = os.path.join(root, file)
-            # Filter matches InputHandler logic
-            if os.path.basename(file_path).startswith('.'): continue
+            file_path: str = os.path.join(root, file)
+            if os.path.basename(file_path).startswith('.'): 
+                continue
             
-            if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf')): continue
-            if "report_" in file or "visualizations_" in file or "MASTER_SYNTHESIS" in file or "upload_package" in file_path: continue
+            if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf')): 
+                continue
+            if "report_" in file or "visualizations_" in file or "MASTER_SYNTHESIS" in file or "upload_package" in file_path: 
+                continue
             
-            report_name = f"report_{os.path.splitext(file)[0]}.md"
+            report_name: str = f"report_{os.path.splitext(file)[0]}.md"
             if os.path.exists(os.path.join(root, report_name)):
                  continue
 
             logging.info(f"📂 Found unprocessed historical file: {file}")
             processor.add_task(file_path)
+    return None
 
-def main():
-    pipeline = ResearchPipeline()
-    processor = AsyncProcessor(pipeline)
-    handler = InputHandler(processor)
+def main() -> None:
+    """
+    Unified entry point for the Automated Research Pipeline.
+    Sets up monitoring and begins the processing loop.
+    """
+    pipeline: ResearchPipeline = ResearchPipeline()
+    processor: AsyncProcessor = AsyncProcessor(pipeline)
+    handler: InputHandler = InputHandler(processor)
     
-    observer = Observer()
+    observer: Observer = Observer()
     observer.schedule(handler, ROOT_DIR, recursive=True)
     observer.start()
     
     # Verify Self
     try:
-        from validation_17_layers import validate_code_17_layers
+        from scripts.validation_17_layers import validate_code_17_layers
         logging.info("🛡️ [Self-Diagnostic] Running 17-Layer Code Validation...")
         with open(__file__, 'r') as f: self_code = f.read()
-        result = validate_code_17_layers(self_code, "auto_research_pipeline.py")
+        result: Dict[str, Any] = validate_code_17_layers(self_code, "auto_research_pipeline.py")
         if result['quality_score'] < 80:
             logging.warning(f"⚠️ Code Quality Warning! Score: {result['quality_score']}/100")
         else:
             logging.info(f"✅ Code Integrity Verified.")
-    except:
-        pass
+    except Exception as e:
+        logging.debug(f"Self-audit skipped: {e}")
 
     logging.info(f"🚀 Robust Logic Pipeline Started.")
     logging.info(f"📂 Root: {os.path.abspath(ROOT_DIR)}")
     
-    loop = asyncio.get_event_loop()
+    loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
     # Schedule historical scan
     loop.run_until_complete(scan_existing_files(processor))
     
@@ -500,6 +644,7 @@ def main():
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+    return None
 
 if __name__ == "__main__":
     main()

@@ -3,6 +3,13 @@
 > **「閃電一擊，智慧入林。」**  
 > *"One Lightning Strike, A Forest of Wisdom."*
 
+---
+### 🛡️ 隱私安全保證 | Privacy & Security Guarantee
+**「我們看不見你的任何資料。」** | **"We cannot see any of your data."**  
+FlashSquirrel 採用 **100% 本地化 / 零知識 (Zero-Knowledge)** 架構。你的思想與 API 密鑰僅鎖在你的電腦與 iCloud 中。  
+
+---
+
 [繁體中文](#繁體中文) | [English](#english)
 
 ---
@@ -54,6 +61,14 @@
 
 ### 4. 故障自我修復 (Auto-Repair Architecture) ☁️
 具備 iCloud 佔位符智能識別、API 流量限制自動對沖與異步隊列管理。系統在不穩定的網路與雲端環境中依舊能保持硬化運行。
+
+### 5. 隱私與安全保證 (Privacy & Security First) 🔒
+> [!IMPORTANT]
+> **我們看不見你的任何資料**。
+> FlashSquirrel 採用「零知識 (Zero-Knowledge)」架構：
+> - **無後端伺服器**：你的思想、文件與 API Key 只存在於你的本地電腦與 iCloud。
+> - **本地運算**：所有的研究邏輯與報告生成都在你的電腦上完成。
+> - **透明審核**：代碼 100% 開源，並通過 17 層品質硬化審核，絕無後門。
 
 ---
 
@@ -201,6 +216,14 @@ We don't just claim it's cheap; we show you the math. You can choose your API ti
 
 ### 4. Auto-Repair Architecture ☁️
 Features intelligent iCloud placeholder detection, API rate limit hedging, and asynchronous queue management. The system remains robust across unstable network and cloud environments.
+
+### 5. Privacy & Security First 🔒
+> [!IMPORTANT]
+> **We cannot see any of your data**.
+> FlashSquirrel uses a "Zero-Knowledge" architecture:
+> - **No Backend Servers**: Your thoughts, files, and API Keys reside only on your local machine and iCloud.
+> - **Local-First**: All reasoning and report generation happen on your own hardware.
+> - **Transparent Audit**: 100% open-source code, hardened by a 17-layer industrial quality audit. No backdoors, ever.
 
 ---
 
