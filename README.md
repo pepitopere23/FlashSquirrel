@@ -26,6 +26,15 @@
 
 **結論**：用 3 美金買回 150 小時的生命，這是無限大的投資報酬率。
 
+### 3. API 方案選擇 (API Tiers)
+*   **免費版 (Free of Charge)**：適合輕量使用。優點是完全免費；缺點是有速率限制（Rate Limit），檔案多時需要「排隊」等待 API 恢復。
+*   **付費版 (Pay-as-you-go)**：適合重度研究。優點是極速、穩定且幾乎不需等待；缺點是需按量計費，但如前所述，一般研究用途每月僅約 $3 USD。
+
+### 4. 使用者情境 (User Personas)
+*   **跨領域研究生**：需要快速理解非本專業的技術文獻，並建立跨學科的知識聯結。
+*   **市場分析師**：每日需處理大量行業報告，並尋找其中的矛盾點與潛在趨勢。
+*   **硬核知識愛好者**：希望將零散的網頁剪輯與隨筆，自動整理成系統化的電子書或筆記。
+
 ---
 
 ## 🛠️ 使用說明 (Usage)
@@ -94,6 +103,15 @@ We build a bridge. Use Gemini for **"Deep Research"** on your raw materials (sup
     *   Your Time: **0 seconds**.
 
 **Conclusion**: Buying back 150 hours of your life for $3 is an infinite ROI.
+
+### 3. API Tier Selection
+*   **Free Tier**: Best for light usage. Pros: Fully free. Cons: Rate limits apply; you'll have to "wait in line" when processing large volumes of files.
+*   **Paid Tier (Pay-as-you-go)**: Best for serious research. Pros: High speed, reliable, no waiting. Cons: Billed by usage, though average research cost is only ~$3 USD/month.
+
+### 4. User Personas
+*   **Interdisciplinary Researchers**: Rapidly understand technical literature outside their primary field and bridge knowledge gaps.
+*   **Market Analysts**: Process high volumes of industry reports daily to find contradictions and emerging trends.
+*   **Hardcore Knowledge Seekers**: Automatically organize scattered web clippings and notes into a systematic knowledge base.
 
 ---
 
