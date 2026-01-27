@@ -34,6 +34,15 @@ def main() -> None:
     print("Welcome to FlashSquirrel Launcher!")
     print("🐿️ "*10 + "\n")
 
+    # 0. Force-CWD: Ensure we are running inside the project folder
+    # This fixes the issue where users download to "Downloads" and run from a different CWD
+    try:
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(project_dir)
+        print(f"📂 Working Directory set to: {project_dir}")
+    except Exception as e:
+        print(f"⚠️ Failed to set working directory: {e}")
+
     # 1. Check for .env file
     if not os.path.exists(".env"):
         print("🔍 First run detected. Initiating Setup Wizard...")
