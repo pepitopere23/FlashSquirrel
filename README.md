@@ -9,6 +9,15 @@
 
 <a name="繁體中文"></a>
 
+## ✨ 報告規格 (Report Capabilities)
+*   **多語言支持**：完美處理 **繁體中文** 與 **英文** 資料，產出高品質雙語報告。
+*   **格式標準**：全自動生成 **Markdown** 檔案，方便您匯入 Obsidian, Notion 或任何筆記軟體。
+*   **分析模式**：
+    - **單點模式 (Single Point)**：針對單個文件進行深度查證與摘要。
+    - **多點模式 (Multi-Point)**：自動偵測多份文件，產出「爭議矩陣」與「綜合綜述」。
+
+---
+
 ## 💡 核心哲學 (The Manifesto)
 
 ### 1. 深度先於廣度 (Deepen, then Synthesize)
@@ -79,9 +88,22 @@ graph TD
     - 雙擊執行資料夾中的 `setup_wizard.py`，貼上您的金鑰並完成 Google 登入。
 3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案放入 iCloud 或任何同步資料夾中。
 
+## 🛠️ 「手把手」使用指南 (Step-by-Step for Everyone)
+
+**如果您已經完成安裝步驟，接下來只需要這樣做：**
+
+1.  **找到資料夾**：
+    - 打開您的 iCloud Drive。
+    - 進入 `研究工作流` 資料夾，您會看到一個 `input_thoughts` 子目錄。
+2.  **丟入素材**：
+    - 只要把任何 PDF、照片或筆記**直接丟進一個子資料夾**（例如：新建一個資料夾叫 `輝達財報分析`）。
+3.  **等待魔法**：
+    - 幾分鐘後，系統會自動在同一個地方產出一個 `[深度報告].md`。
+    - 下一次您再看，原本的資料夾名稱可能已經被 AI 改成了更精準的主題。
+
 ---
 
-## 🛠️ 全平台同步方案 (Cross-Platform Sync)
+## 🛠️ 全平台同步方案 (Sync Strategy)
 *   **Apple 用戶**：利用 iOS 快捷指令與 iCloud Drive 實現無感同步。
 *   **Windows / Android 用戶**：
     - **雲端同步**：支援 OneDrive、Google Drive、Dropbox 或官方 iCloud for Windows。
@@ -95,9 +117,14 @@ graph TD
 
 詳見 [生活化流程手冊](./docs/LIFESTYLE_WORKFLOW.md) 與 [系統架構手冊](./系統架構手冊.md)。
 
----
+## ✨ Report Capabilities
+*   **Multilingual Support**: Masterfully handles **Traditional Chinese** and **English** to produce high-quality bilingual reports.
+*   **Standard Format**: Fully automated **Markdown** files, compatible with Obsidian, Notion, or any note-taking software.
+*   **Analysis Modes**:
+    - **Single Point**: In-depth verification and summary for a single document.
+    - **Multi-Point**: Automatically detects multiple files to produce "Conflict Matrices" and "Integrative Overviews."
 
-<a name="english"></a>
+---
 
 ## 💡 The Manifesto
 
@@ -125,6 +152,19 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
     - Get your [Google AI Studio API Key here](https://aistudio.google.com/app/apikey).
     - Run `setup_wizard.py`, paste your key, and complete the Google login.
 3.  **Sync**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf).
+
+## 🛠️ Simple Usage Walkthrough
+
+**Once setup is complete, here is your daily routine:**
+
+1.  **Locate Folder**:
+    - Open your iCloud Drive (or synced folder).
+    - Navigate to `Research Workflow` -> `input_thoughts`.
+2.  **Drop Files**:
+    - Simply **create a sub-folder** (e.g., `Nvidia Earnings Analysis`) and drop your PDFs, photos, or notes inside.
+3.  **Watch the Magic**:
+    - In a few minutes, a `[Deep Report].md` will appear in that same folder.
+    - Eventually, AI will rename your sub-folder to a more precise topic name.
 
 ---
 
