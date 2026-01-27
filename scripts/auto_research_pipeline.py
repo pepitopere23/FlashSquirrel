@@ -170,7 +170,7 @@ class ResearchPipeline:
             logging.warning(f"Could not log usage: {e}")
             return 0.0
 
-    def generate_with_fallback(self, prompt: str, content_part: Any = None, tools: List[Any] = None) -> Any:
+    async def generate_with_fallback(self, prompt: str, content_part: Any = None, tools: List[Any] = None) -> Any:
         """
         Attempts to generate content with fallback models and exponential backoff.
         
@@ -182,14 +182,14 @@ class ResearchPipeline:
         Returns:
             The successful Gemini response object or None if all fail.
         """
-        contents = [prompt]
+        contents: List[Any] = [prompt]
         if content_part:
             if isinstance(content_part, dict) and 'data' in content_part:
                  contents.append(types.Part.from_bytes(data=content_part['data'], mime_type=content_part['mime_type']))
             else:
                  contents.append(content_part)
 
-        config = None
+        config: Optional[types.GenerateContentConfig] = None
         if tools:
             config = types.GenerateContentConfig(tools=tools)
 
@@ -198,7 +198,7 @@ class ResearchPipeline:
             for attempt in range(5): # Increased to 5 attempts
                 try:
                     logging.info(f"🤖 Trying model: {model_name} (Attempt {attempt+1})...")
-                    response = self.client.models.generate_content(
+                    response: Any = self.client.models.generate_content(
                         model=model_name,
                         contents=contents,
                         config=config
@@ -206,24 +206,24 @@ class ResearchPipeline:
                     self.log_usage(model_name, response)
                     return response
                 except Exception as e:
-                    error_msg = str(e)
+                    error_msg: str = str(e)
                     if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
                         # Jittered Exponential Backoff: 2^attempt + random
-                        wait_time = (2 ** attempt) + random.uniform(0, 1)
+                        wait_time: float = (2 ** attempt) + random.uniform(0, 1)
                         logging.warning(f"⏳ Rate Limit (429) on {model_name}. Waiting {wait_time:.2f}s...")
-                        time.sleep(wait_time)
+                        await asyncio.sleep(wait_time)
                         continue 
                     elif "404" in error_msg or "NOT_FOUND" in error_msg:
                         logging.warning(f"🚫 Model {model_name} not found (404). Skipping...")
                         break 
                     else:
                         logging.warning(f"⚠️ Model {model_name} error: {e}. Switching to next...")
-                        break 
+                        break # Try next model
         
         logging.error("❌ All models failed.")
         return None
 
-    def run_gemini_research(self, file_path: str) -> Optional[str]:
+    async def run_gemini_research(self, file_path: str) -> Optional[str]:
         """
         Phase 1: Deep Research with Grounding (Multimodal + PDF).
         
@@ -246,13 +246,6 @@ class ResearchPipeline:
             
         logging.info(f"🔍 [Phase 1] Starting Gemini Research on: {filename}")
         
-        prompt = """
-        [ROLE: Senior Principal Researcher]
-        [OBJECTIVE: Produce a doctoral-level research report]
-        [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
-        ... (Prompt content truncated for brevity in replacement chunk) ...
-        """
-        # Re-inserting actual prompt logic from view_file earlier
         prompt = """
         [ROLE: Senior Principal Researcher]
         [OBJECTIVE: Produce a doctoral-level research report]
@@ -286,13 +279,6 @@ class ResearchPipeline:
         """
 
         try:
-            report_filename = f"report_{os.path.splitext(filename)[0]}.md"
-            report_path = os.path.join(parent_dir, report_filename)
-            
-            if os.path.exists(report_path) and os.path.getsize(report_path) > 0:
-                logging.info(f"⏩ Skipping existing report: {filename}")
-                return report_path
-
             mime = self.get_mime_type(file_path)
             content_part = None
             
@@ -302,24 +288,27 @@ class ResearchPipeline:
             else:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content_part = f.read()
+            logging.info(f"📡 [Phase 1] Launching Gemini Research for: {filename}...")
+            response: Any = await self.generate_with_fallback(prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
             
-            tools = [types.Tool(google_search=types.GoogleSearch())]
-            response = self.generate_with_fallback(prompt, content_part, tools=tools)
-            
-            if not response or not response.text: 
+            if not response or not response.text:
                 return None
-            
+
+            report_path: str = os.path.join(parent_dir, f"report_{os.path.splitext(filename)[0]}.md")
+            if os.path.exists(report_path) and os.path.getsize(report_path) > 0:
+                logging.info(f"⏩ Skipping existing report: {filename}")
+                return report_path
+
             with open(report_path, "w", encoding="utf-8") as f:
                 f.write(response.text)
             
-            logging.info(f"✅ [Phase 1] Report generated: {report_path}")
+            logging.info(f"📄 [Phase 1] Report generated: {report_path}")
             return report_path
-            
         except Exception as e:
-            logging.error(f"Gemini API Error: {e}")
+            logging.error(f"Phase 1 Gemini Error: {e}")
             return None
 
-    def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
+    async def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
         """
         Phase 1.5: Synthesizes insights from all reports in a folder.
         
@@ -359,11 +348,11 @@ class ResearchPipeline:
         """
         
         try:
-            response = self.generate_with_fallback(prompt, combined_text)
+            response: Any = await self.generate_with_fallback(prompt, combined_text)
             if not response or not response.text: 
                 return None
             
-            synthesis_path = os.path.join(folder_path, "MASTER_SYNTHESIS.md")
+            synthesis_path: str = os.path.join(folder_path, "MASTER_SYNTHESIS.md")
             with open(synthesis_path, "w", encoding="utf-8") as f:
                 f.write(response.text)
             
@@ -383,7 +372,7 @@ class ResearchPipeline:
         """
         prompt: str = f"Generate Slidev (slides.md) and Mermaid (mindmap.mmd) code from this:\n{context[:10000]}"
         try:
-            response: Any = self.generate_with_fallback(prompt)
+            response: Any = await self.generate_with_fallback(prompt)
             if response and response.text:
                 viz_path: str = os.path.join(output_dir, "visualizations.md")
                 with open(viz_path, "w", encoding="utf-8") as f:
@@ -458,7 +447,7 @@ class AsyncProcessor:
             return None
         
         folder_path: str = os.path.dirname(file_path)
-        synthesis_path: Optional[str] = self.pipeline.run_folder_synthesis(folder_path)
+        synthesis_path: Optional[str] = await self.pipeline.run_folder_synthesis(folder_path)
         
         content_to_push: str = ""
         with open(report_path, 'r') as f: content_to_push += f.read()
@@ -485,9 +474,11 @@ class AsyncProcessor:
         # Semantic Renaming
         new_topic = stdout.decode().strip().split('\n')[-1]
         if new_topic and new_topic != topic and "Success" not in new_topic and "Error" not in new_topic:
-            new_folder_path = RobustUtils.safe_rename(folder_path, new_topic)
+            # Standardize with DONE_ prefix for processed folders
+            final_name = f"DONE_{new_topic}_{topic}"
+            new_folder_path = RobustUtils.safe_rename(folder_path, final_name)
             if new_folder_path != folder_path:
-                logging.info(f"🏷️ Renamed: {folder_path} -> {new_folder_path}")
+                logging.info(f"🏷️ Semantic Renamed: {folder_path} -> {new_folder_path}")
                 folder_path = new_folder_path
 
         await self.pipeline.generate_visualizations(content_to_push, folder_path)
