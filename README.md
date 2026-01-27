@@ -105,7 +105,8 @@ graph TD
 1.  **下載與解壓縮**：點擊右上角綠色按鈕 **"Code"** 並選擇 **"Download ZIP"**。
 2.  **一鍵啟動**：執行 `python start.py`。
     - **第一次執行**：松鼠會帶領你設定 API Key 並建立資料夾。
-    - **之後執行**：松鼠會直接開始巡邏資料夾，您只需丟入檔案即可！
+    - **巡邏模式**：啟動後會開啟一個終端機視窗，這是松鼠正在「巡邏」您的資料夾。**請勿關閉此視窗**，否則自動化將停止。
+3.  **🍎 macOS 權限 (必要)**：如果您將資料夾放在 iCloud，請務必前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」，並將 **終端機 (Terminal)** 勾選為開啟。
 
 ---
 
@@ -191,8 +192,9 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 
 1.  **Download & Extract**: Click the green **"Code"** button above and select **"Download ZIP"**.
 2.  **One-Word Start**: Run `python start.py`.
-    - **First Run**: The squirrel will guide you through API setup and folder creation.
-    - **Subsequent Runs**: It goes straight to guarding your research folders. Just drop your files and fly!
+    - **First Run**: The squirrel guides you through API setup and folder creation.
+    - **Patrol Mode**: A terminal window will stay open. This is the squirrel "patrolling" your folders. **Do not close this window**, or the automation will stop.
+3.  **🍎 macOS Permissions (Required)**: If using iCloud, go to "System Settings -> Privacy & Security -> Full Disk Access" and ensure **Terminal** is toggled ON.
 
 ---
 

@@ -19,9 +19,17 @@
 *   **別擔心**：FlashSquirrel 內建自動排隊機制，它會每隔一段時間自動重試，您只需放著不管即可。
 *   **想解鎖極速**：建議前往 Google AI Studio 綁定信用卡開啟付費方案，費用極低（見 README 試算）。
 
-### Q3: 為什麼 NotebookLM 的自動上傳失敗了？
-**A**: 通常是因為 **Cookie 過期**。
 *   **解決方案**：請再次執行 `python setup_wizard.py`（或透過 `start.py` 重新配置），它會彈出瀏覽器讓您重新登入並擷取最新憑證。
+
+### Q4: 那個終端機（黑框框）可以關掉嗎？
+**A**: **目前不行**。
+*   這個視窗是 FlashSquirrel 的「肉身」，它必須開著才能監控資料夾的變動。如果您關掉它，松鼠就下班了，不會再自動幫您研發。
+*   **專業提示**：如果您是高階用戶，可以使用 `scripts/com.user.research_pipeline.plist` 將其設定為後台服務，這樣就完全看不到視窗了。
+
+### Q5: 我在 Mac 上明明丟了檔案，為什麼它一直說「找不到檔案」？
+**A**: 這是典型的 **「權限不足」** 問題。
+*   **原因**：macOS 為了保護您的個資，預設禁止程式讀取 iCloud 或桌面。
+*   **解決方案**：前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」，手動將 **Terminal** (或您使用的終端機軟體) 加入並開啟即可。
 
 ---
 
@@ -40,6 +48,14 @@
 *   **Don't Panic**: FlashSquirrel has a built-in auto-queuing mechanism. It will retry automatically, so you can just leave it running.
 *   **For Speed**: Consider enabling the Paid Tier in Google AI Studio. The cost is extremely low (see the table in README).
 
-### Q3: Why did the NotebookLM auto-upload fail?
-**A**: This is usually due to **expired cookies**.
 *   **Solution**: Run `python setup_wizard.py` again (or re-configure via `start.py`). A browser window will open for you to log in and capture fresh credentials.
+
+### Q4: Can I close the terminal window?
+**A**: **Currently, no**.
+*   This window is the physical process of FlashSquirrel. It must stay open to "watch" your folders. If you close it, the "squirrel" goes home and stops working.
+*   **Pro Tip**: Advanced users can use the `scripts/com.user.research_pipeline.plist` to set it as a background service, making it truly invisible.
+
+### Q5: I'm on a Mac and dropped files, but it says "File not found"?
+**A**: This is a classic **"Permissions"** issue.
+*   **Cause**: macOS limits app access to iCloud or Desktop by default.
+*   **Solution**: Go to "System Settings -> Privacy & Security -> Full Disk Access" and toggle ON for **Terminal**.
