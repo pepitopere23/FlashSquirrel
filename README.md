@@ -160,8 +160,6 @@ We build a bridge. Use Gemini for **"Deep Research"** on your raw materials (sup
 
 Designed with a "Modular Script" philosophy, allowing even non-technical users to start at light speed.
 
-Designed with a "Modular Script" philosophy, allowing even non-technical users to start at light speed.
-
 ### 1. Environment
 *   **OS Support**: Windows or macOS.
 *   **Minimal Config**: Users only need to provide their `Gemini API KEY`.
