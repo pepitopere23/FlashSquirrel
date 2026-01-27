@@ -117,17 +117,17 @@ graph TD
 
 ## 🚀 選擇您的研究靈魂 (Choose Your Experience)
 
-為了適應不同使用習慣，我們提供兩種自動化層級：
+為了適應不同使用習慣，我們提供兩種自動化層級，適用於 **所有平台 (Mac/Windows)**：
 
 ### 🏁 模式 A：半自動模式 (Semi-Auto: Active Patrol)
 **適合：** 初學者、臨時研究者、或是想看到松鼠正在工作的安全感。
-1.  **啟動**：執行 `python start.py`。
+1.  **啟動**：執行 `python start.py` 並選擇模式 2。
 2.  **體驗**：螢幕會出現一個終端機黑框（巡邏模式），只要視窗不關，所有的手機上傳都會自動處理。
 3.  **注意**：電腦重啟後需要手動再點一次。
 
-### 🛡️ 模式 B：全自動模式 (Full-Auto: Invisible Shield)
+### 🛡️ 模式 B：全自動模式 (Full-Auto: Invisible Shield) —— *推薦*
 **適合：** 專業研究員、追求「掀開螢幕即完成」的極致體驗。
-1.  **啟動**：執行 `python scripts/setup_background.py`。
+1.  **啟動**：執行 `python start.py` 並選擇模式 1 (安裝服務)。
 2.  **體驗**：**完全沒有視窗**。松鼠會化為隱形守護進程，電腦開機即自動守護資料夾。
 3.  **優勢**：真正達成「手機丟檔案 -> 筆記本見」的無感體驗。
 4.  **⚠️ 重要權限**：背景執行時，若無開通「完全磁碟取用權限」，松鼠會直接「無聲失蹤」。請務必參考下方 FAQ 完成權限設定。
@@ -138,13 +138,12 @@ graph TD
 
 ### 1. 純電腦使用者 (Desktop Only)
 1.  **自動生成**：首次執行 `start.py` 後，系統會自動在專案目錄下建立 `data/input_thoughts` 資料夾。
-2.  **管理素材**：將文件（PDF、照片）放入子資料夾，AI 將自動完成本地分析。
+2.  **管理素材**：將文件（PDF、照片）直接拖入該資料夾（或建立子資料夾），AI 將自動完成本地分析。
 
 ### 2. Apple 全家桶用戶 (Apple Ecosystem)
 1.  **環境配置**：在 iCloud Drive 中確保有一個名為 **`研究工作流`** 的資料夾（名稱必須完全一致，以匹配 iOS 捷徑）。
-2.  **一鍵啟動**：執行 `python start.py` 並直接按 **Enter** 確認預設路徑。
-3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
-4.  **自動化**：手機上傳，Mac 在後台自動執行研發與更名。
+2.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
+3.  **自動化**：手機上傳，Mac 在後台（全自動模式）或前台（半自動模式）自動執行研發與更名。
 
 > [!IMPORTANT]
 > **💡 常見問題與技術說明 (FAQ & Tech Notes)**
@@ -152,27 +151,15 @@ graph TD
 > *   **同步響應時間**：請確認您已開啟 **「完全磁碟取用權限 (Full Disk Access)」**（至系統設定 -> 隱私與安全性 -> 將「終端機 Terminal」勾選為開啟）。**設定完成後請重啟終端機視窗**。iCloud 指令同步至電腦約需 5-30 秒之響應時間。
 
 ### 3. Windows / Android / 跨平台用戶 (Universal Support)
-
-我們提供兩種模式，讓您自由選擇：
-
-#### 🚀 方案 A：全自動模式 (Full-Automatic) —— *推薦*
-適合希望「裝完即忘」、追求極致無感體驗的用戶。
-1.  **Windows 原生支援**：FlashSquirrel 內建了 Windows 專用的後台服務 (Task Scheduler)。只要執行 `python start.py` 並選擇安裝服務，系統會自動設定「開機即啟動」的隱形守衛。
-2.  **跨平台同步**：配合 OneDrive / Google Drive，手機丟檔，電腦自動在後台秒處理。
-
-#### 🕹️ 方案 B：半自動模式 (Semi-Automatic)
-適合希望完全掌控執行時機，或者偶爾才需要使用的用戶。
-1.  **不需安裝服務**：不需要設定開機啟動。
-2.  **隨點隨用**：當您想要整理研究時，只需手動打開終端機執行 `python start.py`。
-3.  **同樣強大**：只要程式開著，它的偵測與分析能力與全自動模式完全一樣強大。
+1.  **同步媒介**：安裝 **OneDrive**、**Google Drive** 或 **iCloud for Windows**。
+2.  **設定路徑**：手機端將檔案存入雲端同步資料夾。
+3.  **自動化**：電腦端（Windows/Mac）的松鼠偵測到檔案同步落地後，即刻啟動處理。
 
 ---
 
 ## 🛠️ 全平台同步方案 (Sync Strategy)
 *   **Apple 用戶**：利用 iOS 快捷指令與 iCloud Drive 實現無感同步。
-*   **Windows / Android 用戶**：
-    - **雲端同步**：支援 OneDrive、Google Drive、Dropbox 或官方 iCloud for Windows。
-    - **通用方案**：任何能將手機檔案「同步至電腦資料夾」的工具（如 Telegram 目錄映射）均可啟動閃電工作流。
+*   **Windows / Android 用戶**：任何能將手機檔案「同步至電腦資料夾」的工具（如 Telegram 目錄映射）均可啟動閃電工作流。
 
 ---
 
