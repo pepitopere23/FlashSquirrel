@@ -21,7 +21,11 @@
 ## 💡 核心哲學 (The Manifesto)
 
 ### 1. 深度先於廣度 (Deepen, then Synthesize)
-先透過 Gemini 進行深度文獻研發，自動補足數據與查證，再將高含金量報告餵給 NotebookLM 歸檔與代謝。
+**解決 AI 的「香農熵 (Entropy)」問題**：
+根據香農資訊理論，資訊在傳遞中會產生損耗（噪音）。AI 在處理過於龐大、未經整理的資料庫時，回覆會變得「零散」且「準確度下降」。
+
+**FlashSquirrel 的解法**：
+拒絕直接將垃圾塞入 AI。我們利用 **Markdown 結構化報告** 作為資訊濾波器：先透過 Gemini 2.0 進行「高能量過濾」與「深度研發」，將雜亂的原始訊號轉化為高密度的結構化報告，再餵給 NotebookLM。這能確保您的知識庫永遠保持「低熵 (Low Entropy)」且高度精確。
 
 ### 2. 時間套利 (Time Arbitrage)
 每天節省的手動處理時間約為 5 小時，每月累計節省約 150 小時。讓 AI 負責繁複的勞力，您負責最終的決策。
@@ -129,7 +133,11 @@ graph TD
 ## 💡 The Manifesto
 
 ### 1. Deepen, then Synthesize
-Utilize Gemini for deep academic research to supplement data and verify facts, then feed high-value reports into NotebookLM for archiving and synthesis.
+**Solving the "Shannon Entropy" Problem**:
+According to Shannon's Information Theory, information loss (noise) occurs during transmission. When AI processes an unorganized, massive database, its responses become "scattered" and "less accurate."
+
+**The FlashSquirrel Solution**:
+We refuse to feed raw "noise" into the AI. We use **Markdown-structured reports** as an information filter. By using Gemini 2.0 for "High-Energy Filtering" and "Deep Research," we transform chaotic raw signals into high-density structured reports before they reach NotebookLM. This ensures your knowledge base remains in a "Low Entropy" state with maximum precision.
 
 ### 2. Time Arbitrage
 Saves approximately 5 hours of manual processing daily, totaling 150 hours per month. Let AI handle the heavy lifting while you focus on final decision-making.
