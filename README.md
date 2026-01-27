@@ -87,9 +87,11 @@ graph TD
 **如果您希望以最快速度啟動閃電工作流，請按照以下步驟操作：**
 
 1.  **下載與解壓縮**：點擊右上角綠色按鈕 **"Code"** 並選擇 **"Download ZIP"**。
-2.  **一鍵配置大腦**：雙擊執行 `setup_wizard.py`，貼上您的 API 金鑰並完成 Google 登入。
-3.  **啟動後台引擎**：執行 `scripts/run_pipeline.sh` (Mac) 或 `python scripts/auto_research_pipeline.py` (Windows)，讓松鼠開始巡邏資料夾。
-4.  **開始研究**：將檔案丟入 `input_thoughts` 資料夾中的子目錄，魔法就會發生！
+2.  **一鍵啟動**：執行 `python start.py`。
+    - **第一次執行**：松鼠會帶領你設定 API Key 並建立資料夾。
+    - **之後執行**：松鼠會直接開始巡邏資料夾，您只需丟入檔案即可！
+
+---
 
 ## 🛠️ 三種使用路徑 (Three Usage Paths)
 
@@ -156,9 +158,11 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 **To launch your Flash Research workflow at light speed, follow these steps:**
 
 1.  **Download & Extract**: Click the green **"Code"** button above and select **"Download ZIP"**.
-2.  **Configure**: Run `setup_wizard.py`, paste your API Key, and complete the Google login.
-3.  **Start the Engine**: Run `scripts/run_pipeline.sh` (Mac) or `python scripts/auto_research_pipeline.py` (Windows) to let the squirrel start guarding your folders.
-4.  **Start Research**: Drop your files into a sub-folder within `input_thoughts`, and the magic begins!
+2.  **One-Word Start**: Run `python start.py`.
+    - **First Run**: The squirrel will guide you through API setup and folder creation.
+    - **Subsequent Runs**: It goes straight to guarding your research folders. Just drop your files and fly!
+
+---
 
 ## 🛠️ Three Usage Paths
 
