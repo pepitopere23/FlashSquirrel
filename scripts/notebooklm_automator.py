@@ -76,40 +76,69 @@ async def create_and_upload(file_path, title_hint=None):
 
         if not topic_found:
             print(f"✨ Creating NEW notebook. (Hint was: {title_hint})")
+            
+            # Wait for any overlay backdrops to disappear
+            try:
+                await page.wait_for_selector(".cdk-overlay-backdrop", state="hidden", timeout=5000)
+            except:
+                pass
+
             # Try English then Chinese
             try:
-                await page.get_by_text("New Notebook", exact=False).first.click(timeout=3000)
+                # Use force=True to bypass intercepting elements if possible
+                await page.get_by_text("New Notebook", exact=False).first.click(timeout=3000, force=True)
             except:
-                await page.get_by_text("建立新的筆記本", exact=False).first.click()
+                await page.get_by_text("建立新的筆記本", exact=False).first.click(force=True)
                 
             await page.wait_for_url("**/notebook/**")
             # We DON'T rename it here. We let NotebookLM auto-name it based on the first upload.
 
         # Upload
         try:
-            async with page.expect_file_chooser() as fc_info:
+            # Wait for the "Add Source" modal to appear after creation
+            await asyncio.sleep(5)
+            
+            # Debug: Capture screenshot to see the state
+            # await page.screenshot(path="debug_after_create.png")
+            # print("📸 Screenshot saved to debug_after_create.png")
+
+            try:
+                # Based on screenshot, we need to click "上傳檔案" or a button with an upload icon
+                async with page.expect_file_chooser(timeout=10000) as fc_info:
+                    # Target the specific button seen in screenshot
+                    upload_btn = page.get_by_text("上傳檔案", exact=False)
+                    if await upload_btn.count() > 0:
+                        await upload_btn.first.click(force=True)
+                    else:
+                        # Fallback to other possible selectors
+                        await page.get_by_text("Upload files", exact=False).first.click(force=True)
+                
+                file_chooser = await fc_info.value
+                await file_chooser.set_files(file_path)
+                print(f"🚀 File selected and uploading: {os.path.basename(file_path)}")
+
+            except Exception as e:
+                print(f"File chooser trigger warning: {e}")
+                # Fallback: look for hidden input
                 inputs = await page.query_selector_all("input[type='file']")
                 if inputs:
                     await inputs[0].set_input_files(file_path)
-                else:
-                    # Fallback click (English / Chinese)
-                    try:
-                        await page.click("text=Source", timeout=2000)
-                    except:
-                        await page.click("text=來源") # Or '新增來源'
-                        
+
         except Exception as e:
             print(f"Upload warning: {e}")
+            await page.screenshot(path="debug_error.png")
 
-        await asyncio.sleep(15) # Wait for upload (Increased to 15s)
+        await asyncio.sleep(20) # Increased wait for upload
         
         # Get final title (NotebookLM might have auto-named it)
         final_title = "Untitled"
         try:
+            # Wait for title to appear
             title_el = page.locator("input[aria-label='Notebook title']")
             # Try Chinese label if English fails
             if await title_el.count() == 0:
                  title_el = page.locator("input[aria-label='筆記本標題']")
+            
             if await title_el.count() > 0:
                 final_title = await title_el.input_value()
         except:
