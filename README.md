@@ -122,8 +122,10 @@ graph TD
 2.  **管理素材**：將文件（PDF、照片）放入子資料夾，AI 將自動完成本地分析。
 
 ### 2. Apple 全家桶用戶 (Apple Ecosystem)
-1.  **移動端捕捉**：使用 [iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 隨手記錄。
-2.  **iCloud 自動化**：手機上傳，Mac 在後台自動執行研發與更名。
+1.  **環境配置**：在 iCloud Drive 中確保有一個名為 **`研究工作流`** 的資料夾（名稱必須完全一致，以匹配 iOS 捷徑）。
+2.  **一鍵啟動**：執行 `python start.py` 並選擇 iCloud 路徑。
+3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
+4.  **自動化**：手機上傳，Mac 在後台自動執行研發與更名。
 
 ### 3. Windows / 跨平台組合 (Windows & Cross-Platform)
 1.  **同步媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive**。
@@ -214,9 +216,11 @@ To fit different workflows, we offer two tiers of automation:
 1.  **Auto-Creation**: After running `start.py`, the system automatically creates the `data/input_thoughts` folder.
 2.  **Direct Drop**: Place your files into sub-folders. AI handles all analysis locally.
 
-### 2. Apple Ecosystem (Full)
-1.  **Mobile Capture**: Use our [iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) for on-the-go recording.
-2.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
+### 2. Apple Ecosystem
+1.  **Environment**: Ensure you have a folder named **`研究工作流`** in your iCloud Drive (The name must match the iOS Shortcut exactly).
+2.  **One-Word Start**: Run `python start.py` and select the iCloud path.
+3.  **Syncing**: [Download the iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) and share files (photos, web, PDFs) to that folder.
+4.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
 
 ### 3. Windows & Cross-Platform
 1.  **Bridge**: Install **iCloud for Windows** or use **OneDrive/Google Drive**.
