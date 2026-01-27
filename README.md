@@ -92,18 +92,19 @@ graph TD
     - 雙擊執行資料夾中的 `setup_wizard.py`，貼上您的金鑰並完成 Google 登入。
 3.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案放入 iCloud 或任何同步資料夾中。
 
-## 🛠️ 「手把手」使用指南 (Step-by-Step for Everyone)
+## 🛠️ 三種「貼心」使用路徑 (Three Thoughtful Routes)
 
-**如果您已經完成安裝步驟，接下來只需要這樣做：**
+### 路徑 A：純電腦使用者 (Desktop Only)
+1.  **建立資料夾**：在本地創建 `研究工作流/input_thoughts` 資料夾。
+2.  **手動管理**：將文件（PDF、照片）放入子資料夾，AI 將在本地完成所有分析。
 
-1.  **找到資料夾**：
-    - 打開您的 iCloud Drive。
-    - 進入 `研究工作流` 資料夾，您會看到一個 `input_thoughts` 子目錄。
-2.  **丟入素材**：
-    - 只要把任何 PDF、照片或筆記**直接丟進一個子資料夾**（例如：新建一個資料夾叫 `輝達財報分析`）。
-3.  **等待魔法**：
-    - 幾分鐘後，系統會自動在同一個地方產出一個 `[深度報告].md`。
-    - 下一次您再看，原本的資料夾名稱可能已經被 AI 改成了更精準的主題。
+### 路徑 B：Apple 全家桶用戶 (iOS + Mac)
+1.  **自動化**：使用我們的 [iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 捕捉內容。
+2.  **iCloud 同步**：手機拍照，Mac 自動在後台「閃電」執行並更名。
+
+### 路徑 C：Windows + 安卓/iOS 組合 (Windows + Mobile)
+1.  **雲端媒介**：在 Windows 安裝 **iCloud for Windows** 或使用 **OneDrive/Dropbox**。
+2.  **同步監控**：手機將檔案同步至指定雲端資料夾，FlashSquirrel 將在 Windows 上自動完成後續工作。
 
 ---
 
@@ -161,18 +162,19 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
     - Run `setup_wizard.py`, paste your key, and complete the Google login.
 3.  **Sync**: [Download the iOS Shortcut here](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf).
 
-## 🛠️ Simple Usage Walkthrough
+## 🛠️ Three Thoughtful Usage Scenarios
 
-**Once setup is complete, here is your daily routine:**
+### Route A: Desktop-Only Users
+1.  **Create Folder**: Create a local `Research Workflow/input_thoughts` folder.
+2.  **Manual Drop**: Place your files into sub-folders. AI handles all analysis locally.
 
-1.  **Locate Folder**:
-    - Open your iCloud Drive (or synced folder).
-    - Navigate to `Research Workflow` -> `input_thoughts`.
-2.  **Drop Files**:
-    - Simply **create a sub-folder** (e.g., `Nvidia Earnings Analysis`) and drop your PDFs, photos, or notes inside.
-3.  **Watch the Magic**:
-    - In a few minutes, a `[Deep Report].md` will appear in that same folder.
-    - Eventually, AI will rename your sub-folder to a more precise topic name.
+### Route B: Full Apple Ecosystem (iOS + Mac)
+1.  **Automation**: Use our [iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) to capture content.
+2.  **iCloud Sync**: Capture on iPhone; analysis and folder renaming happen silently on your Mac.
+
+### Route C: Windows + Android/iOS Combo
+1.  **Cloud Bridge**: Install **iCloud for Windows** or use **OneDrive/Dropbox**.
+2.  **Sync & Watch**: Sync files from your mobile to a designated cloud folder. FlashSquirrel automatically processes them on your Windows PC.
 
 ---
 
