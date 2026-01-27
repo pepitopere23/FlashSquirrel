@@ -30,17 +30,26 @@ def check_dependencies():
         sys.exit(1)
 
 def configure_api_key():
-    print("\n🔑 Step 1: Gemini API Key")
-    print("Get your free key here: https://aistudio.google.com/app/apikey")
+    print("\n" + "-"*40)
+    print("🔑 Step 1: Get Your Magic Key (API Key)")
+    print("-" * 40)
+    print("To make the Squirrel intelligent, we need a small 'password' from Google.")
+    print("Don't worry, it's free and takes 10 seconds.\n")
+    
+    print("👉 1. Click (or copy) this link:")
+    print("   https://aistudio.google.com/app/apikey")
+    print("\n👉 2. Click 'Create API Key' -> 'Create API key in new project'")
+    print("👉 3. Copy that long text string starting with 'AIza...'")
+    print("-" * 40 + "\n")
     
     current_key = os.getenv("GEMINI_API_KEY", "")
-    prompt = f"Paste your Gemini API Key [{current_key[:6]}...]: " if current_key else "Paste your Gemini API Key: "
+    prompt = f"Paste your Key here (Right-click -> Paste) [{current_key[:6]}...]: " if current_key else "Paste your Key here: "
     
     key = input(prompt).strip()
     if not key and current_key:
         key = current_key
     elif not key:
-        print("⚠️ API Key is required to run the pipeline.")
+        print("⚠️  The Squirrel needs the key to wake up! Please try again.")
         return configure_api_key()
     return key
 
