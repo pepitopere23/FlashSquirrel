@@ -259,6 +259,21 @@ To fit different workflows, we offer two tiers of automation:
 
 ---
 
+## 👶 Baby Steps for Beginners
+
+First time exploring? Don't worry about any technical setup. Just open the app and let the Squirrel guide you:
+
+1.  **Double-Click Start**: Find `start.py` in the folder and double-click it. (Or run `python start.py` in your terminal).
+2.  **Enter the Key**: Typically, you need a "Gemini API Key".
+    *   The window will show you a link. Click it to log in to Google.
+    *   Click "Create API Key", then copy the long string starting with `AIza...`.
+    *   Right-click and paste it into the black window, then press Enter.
+3.  **Log In Once**: The program will open a browser to NotebookLM. Just log in with your Google account, then close the window.
+
+**That's it!** All complex configurations have been handled in the background.
+
+---
+
 ## 🛠️ Three Usage Paths
 
 ### 1. Desktop Only
