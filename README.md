@@ -97,16 +97,21 @@ graph TD
 
 ---
 
-## 🚀 快速開始 (Quick Start)
+## 🚀 選擇您的研究靈魂 (Choose Your Experience)
 
-### 🏁 極簡安裝步驟
-**如果您希望以最快速度啟動閃電工作流，請按照以下步驟操作：**
+為了適應不同使用習慣，我們提供兩種自動化層級：
 
-1.  **下載與解壓縮**：點擊右上角綠色按鈕 **"Code"** 並選擇 **"Download ZIP"**。
-2.  **一鍵啟動**：執行 `python start.py`。
-    - **第一次執行**：松鼠會帶領你設定 API Key 並建立資料夾。
-    - **巡邏模式**：啟動後會開啟一個終端機視窗，這是松鼠正在「巡邏」您的資料夾。**請勿關閉此視窗**，否則自動化將停止。
-3.  **🍎 macOS 權限 (必要)**：如果您將資料夾放在 iCloud，請務必前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」，並將 **終端機 (Terminal)** 勾選為開啟。
+### 🏁 模式 A：半自動模式 (Semi-Auto: Active Patrol)
+**適合：** 初學者、臨時研究者、或是想看到松鼠正在工作的安全感。
+1.  **啟動**：執行 `python start.py`。
+2.  **體驗**：螢幕會出現一個終端機黑框（巡邏模式），只要視窗不關，所有的手機上傳都會自動處理。
+3.  **注意**：電腦重啟後需要手動再點一次。
+
+### 🛡️ 模式 B：全自動模式 (Full-Auto: Invisible Shield)
+**適合：** 專業研究員、追求「掀開螢幕即完成」的極致體驗。
+1.  **啟動**：執行 `python scripts/setup_background.py`。
+2.  **體驗**：**完全沒有視窗**。松鼠會化為隱形守護進程，電腦開機即自動守護資料夾。
+3.  **優勢**：真正達成「手機丟檔案 -> 筆記本見」的無感神蹟。
 
 ---
 
@@ -185,16 +190,21 @@ Features intelligent iCloud placeholder detection, API rate limit hedging, and a
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Choose Your Experience
 
-### 🏁 Minimal Setup Steps
-**To launch your Flash Research workflow at light speed, follow these steps:**
+To fit different workflows, we offer two tiers of automation:
 
-1.  **Download & Extract**: Click the green **"Code"** button above and select **"Download ZIP"**.
-2.  **One-Word Start**: Run `python start.py`.
-    - **First Run**: The squirrel guides you through API setup and folder creation.
-    - **Patrol Mode**: A terminal window will stay open. This is the squirrel "patrolling" your folders. **Do not close this window**, or the automation will stop.
-3.  **🍎 macOS Permissions (Required)**: If using iCloud, go to "System Settings -> Privacy & Security -> Full Disk Access" and ensure **Terminal** is toggled ON.
+### 🏁 Mode A: Semi-Automatic (Active Patrol)
+**Best for:** Beginners or those who want the visible security of seeing the "Squirrel" at work.
+1.  **Start**: Run `python start.py`.
+2.  **Experience**: A terminal window stays open (Patrol Mode). As long as it's open, all mobile uploads are processed automatically.
+3.  **Note**: Requires a manual re-start after a computer reboot.
+
+### 🛡️ Mode B: Full-Automatic (Invisible Shield)
+**Best for:** Professional researchers seeking a "flip the lid and it's done" experience.
+1.  **Start**: Run `python scripts/setup_background.py`.
+2.  **Experience**: **Completely invisible**. FlashSquirrel becomes a background system service that guards your folders automatically upon login.
+3.  **Benefit**: Realize the "Mobile Drop -> NotebookLM" miracle with zero friction.
 
 ---
 
