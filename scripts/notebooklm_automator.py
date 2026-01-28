@@ -134,11 +134,12 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
             print(f"✨ Creating NEW notebook. (Target: {title_hint})")
             try:
                 await page.wait_for_selector(".cdk-overlay-backdrop", state="hidden", timeout=3000)
-            except: pass
+            except Exception:
+                pass
 
             try:
                 await page.get_by_text("New Notebook", exact=False).first.click(timeout=3000, force=True)
-            except:
+            except Exception:
                 await page.get_by_text("建立新的筆記本", exact=False).first.click(force=True)
             await page.wait_for_url("**/notebook/**", timeout=15000)
 
@@ -169,7 +170,7 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
             # Try to catch the title from the input field
             title_el = page.locator("input[aria-label='Notebook title']")
             if await title_el.count() == 0:
-                 title_el = page.locator("input[aria-label='筆記本標題']")
+                title_el = page.locator("input[aria-label='筆記本標題']")
             
             if await title_el.count() > 0:
                 final_title = await title_el.input_value()
@@ -196,7 +197,8 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
                     emoji = lines[0]
                     final_title = f"{emoji} {lines[2]}"
                     break
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Error during card resolution: {e}")
 
         if map_file and title_hint and final_title != "Untitled":
             save_mapping(map_file, title_hint, final_title)

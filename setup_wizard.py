@@ -12,12 +12,19 @@ import subprocess
 import time
 from pathlib import Path
 
-def print_banner():
+def print_banner() -> None:
+    """
+    Prints the FlashSquirrel setup wizard banner.
+    """
     print("\n" + "="*60)
     print("🐿️  FlashSquirrel (閃電松鼠) - Setup Wizard")
     print("="*60 + "\n")
+    return None
 
-def check_dependencies():
+def check_dependencies() -> None:
+    """
+    Checks for required dependencies and installs them using pip and playwright.
+    """
     print("📦 Checking and installing dependencies...")
     try:
         print("   -> Installing Python libraries...")
@@ -41,8 +48,12 @@ def check_dependencies():
         print(f"❌ Error installing dependencies: {e}")
         print("Please ensure you have an active internet connection.")
         sys.exit(1)
+    return None
 
-def pre_flight_check():
+def pre_flight_check() -> None:
+    """
+    Performs system integrity checks (OS, Python, Network) before proceeding.
+    """
     print("\n" + "-"*40)
     print("🛡️  System Integrity Pre-Flight Check")
     print("-" * 40)
@@ -67,8 +78,15 @@ def pre_flight_check():
     print("📊 System Integrity Check: PASSED")
     print("-" * 40)
     time.sleep(1)
+    return None
 
-def configure_api_key():
+def configure_api_key() -> str:
+    """
+    Guides the user to configure their Google Gemini API Key.
+    
+    Returns:
+        The validated API key string.
+    """
     print("\n" + "-"*40)
     print("🔑 Step 1: API Key Configuration")
     print("-" * 40)
@@ -91,7 +109,10 @@ def configure_api_key():
         return configure_api_key()
     return key
 
-def capture_cookies():
+def capture_cookies() -> None:
+    """
+    Captures NotebookLM cookies using either automated stealth browser or manual entry.
+    """
     print("\n" + "-"*40)
     print("🍪 Step 2: NotebookLM Authentication")
     print("-" * 40)
@@ -173,8 +194,15 @@ def capture_cookies():
         print("\n💡 Tip: Google might have blocked the automated browser.")
         print("Try Method 2 [Manual] to bypass this.")
         return capture_cookies()
+    return None
 
-def setup_environment(api_key):
+def setup_environment(api_key: str) -> None:
+    """
+    Finalizes the environment configuration, creates directory structure, and writes .env.
+    
+    Args:
+        api_key: The Google Gemini API key to save.
+    """
     print("\n📁 Step 3: Finalizing Configuration")
     
     # Default path for research workflow
@@ -219,8 +247,12 @@ def setup_environment(api_key):
     
     print(f"✅ .env file created.")
     print(f"✅ Directory structure initialized at {root_path}")
+    return None
 
-def run_simulation_offer():
+def run_simulation_offer() -> None:
+    """
+    Offers to run a simulation script to verify the system setup.
+    """
     print("\n" + "-"*40)
     print("🧪 Installation Verification / 安裝驗證")
     print("-" * 40)
@@ -249,8 +281,12 @@ def run_simulation_offer():
             print(f"❌ Simulation failed: {e}")
     else:
         print("👌 Skipping simulation. You can run it later via 'python scripts/test_user_journey.py'")
+    return None
 
-def main():
+def main() -> None:
+    """
+    The primary entry point for the FlashSquirrel Setup Wizard.
+    """
     print_banner()
     check_dependencies()
     pre_flight_check()
@@ -268,6 +304,7 @@ def main():
     else:
         print("   python scripts/auto_research_pipeline.py")
     print("="*60 + "\n")
+    return None
 
 if __name__ == "__main__":
     main()

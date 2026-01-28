@@ -185,9 +185,9 @@ class ResearchPipeline:
         contents: List[Any] = [prompt]
         if content_part:
             if isinstance(content_part, dict) and 'data' in content_part:
-                 contents.append(types.Part.from_bytes(data=content_part['data'], mime_type=content_part['mime_type']))
+                contents.append(types.Part.from_bytes(data=content_part['data'], mime_type=content_part['mime_type']))
             else:
-                 contents.append(content_part)
+                contents.append(content_part)
 
         config: Optional[types.GenerateContentConfig] = None
         if tools:
@@ -620,7 +620,7 @@ async def scan_existing_files(processor: AsyncProcessor) -> None:
             
             report_name: str = f"report_{os.path.splitext(file)[0]}.md"
             if os.path.exists(os.path.join(root, report_name)):
-                 continue
+                continue
 
             logging.info(f"📂 Found unprocessed historical file: {file}")
             processor.add_task(file_path)
