@@ -147,7 +147,7 @@ async def create_and_upload(file_path, title_hint=None, map_file=None):
             save_mapping(map_file, title_hint, final_title)
 
         await browser.close()
-        print(final_title) # Output for shell capture
+        print(f"RESULT:{final_title}") # Reliable output for shell capture
         return final_title
 
 if __name__ == "__main__":

@@ -473,10 +473,24 @@ class AsyncProcessor:
         stdout, stderr = await proc.communicate()
         
         # Semantic Renaming
-        new_topic = stdout.decode().strip().split('\n')[-1]
-        if new_topic and new_topic != topic and "Success" not in new_topic and "Error" not in new_topic:
+        output_lines = stdout.decode().strip().split('\n')
+        new_topic = None
+        for line in reversed(output_lines):
+            if line.startswith("RESULT:"):
+                new_topic = line.replace("RESULT:", "").strip()
+                break
+        
+        if new_topic and new_topic != "Untitled" and "Success" not in new_topic and "Error" not in new_topic:
             # Standardize with DONE_ prefix for processed folders
-            final_name = f"DONE_{new_topic}_{topic}"
+            # Remove any recursive DONE_ or debug prefixes if topic was already messy
+            clean_base = topic
+            if "DONE_" in clean_base:
+                # Extract the original part if it was already renamed once
+                parts = clean_base.split("_")
+                if len(parts) > 1:
+                    clean_base = parts[-1]
+            
+            final_name = f"DONE_{new_topic}_{clean_base}"
             new_folder_path = RobustUtils.safe_rename(folder_path, final_name)
             if new_folder_path != folder_path:
                 logging.info(f"🏷️ Semantic Renamed: {folder_path} -> {new_folder_path}")
