@@ -161,6 +161,25 @@ graph TD
 2.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
 3.  **自動化**：手機上傳，Mac 在後台（全自動模式）或前台（半自動模式）自動執行研發與更名。
 
+---
+
+## 🆘 常見問題與備援計畫 (Troubleshooting & Backup Plan)
+
+> [!IMPORTANT]
+> 如果在設定過程中，Google 提示「目前無法登入帳戶」（這通常是為了防範自動化攻擊），請使用我們的 **「備援計畫 (Backup Plan)」**：
+> 1.  **安裝外掛 (推薦)**：在您的 Chrome 瀏覽器安裝 [Cookie-Editor](https://chrome.google.com/webstore/detail/cookie-editor/hlkenmokingibaunbegebcibehehpofp) 或類似工具。
+> 2.  **提取資訊**：打開 [NotebookLM 官網](https://notebooklm.google.com/) 並登入，點擊外掛圖示，選擇 **Export -> JSON**。
+> 3.  **手動貼上**：執行 `python start.py`，在 **Step 2** 選擇 **`2. [Manual]`**，將剛才複製的內容貼上即可。
+> 
+> *💡 **進階玩家 (DevTools)**：按 F12 -> Application -> Cookies -> 複製所有 `notebooklm.google.com` 下的項項，並轉換為 JSON 格式。*
+
+#### 🛠️ 其他常見修復：
+*   **Playwright 報錯**：如果提示 `No module named 'playwright'`，請嘗試手動執行 `pip install playwright && playwright install chromium`。
+*   **資料夾改名失敗**：確保您的終端機（Terminal）或 IDE 擁有 **「Full Disk Access (完全磁碟存取權)」**。
+*   **美學同步 (Aesthetic Sync)**：若舊的資料夾名字亂掉，可手動執行 `python scripts/aesthetic_repair.py` 進行全自動美化修復。
+
+---
+
 > [!IMPORTANT]
 > **💡 常見問題與技術說明 (FAQ & Tech Notes)**
 > *   **資料夾生成**：只要執行 `start.py` 並按下 **Enter**，系統就會自動在您的 iCloud 中變出完整結構。建議先手動建立「研究工作流」主目錄以供移動端即時存入。
