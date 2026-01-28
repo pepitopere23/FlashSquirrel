@@ -25,6 +25,15 @@ def run_command(cmd_list: List[str]) -> None:
         sys.exit(1)
     return None
 
+def check_dependencies() -> bool:
+    try:
+        import dotenv
+        import playwright
+        import watchdog
+        return True
+    except ImportError:
+        return False
+
 def main() -> None:
     """
     The main entry point for the FlashSquirrel launcher.
@@ -43,9 +52,9 @@ def main() -> None:
     except Exception as e:
         print(f"⚠️ Failed to set working directory: {e}")
 
-    # 1. Check for .env file
-    if not os.path.exists(".env"):
-        print("🔍 First run detected. Initiating Setup Wizard...")
+    # 1. Check for .env file and dependencies
+    if not os.path.exists(".env") or not check_dependencies():
+        print("🔍 First run or missing dependencies detected. Initiating Setup Wizard...")
         run_command(["setup_wizard.py"])
         print("\n✅ Setup complete. Taking a quick breath...")
         time.sleep(2)

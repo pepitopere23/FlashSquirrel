@@ -25,15 +25,21 @@ def check_dependencies():
         
         print("\n   -> Downloading Browser Engine (Playwright Chromium)...")
         print("      ⚠️  This is a large download (~150 MB). Please be patient.")
-        print("      (It might look stuck for a minute, but the Squirrel is working hard!)")
         subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
         
-        print("✅ Dependencies installed successfully.")
+        # Verify importability
+        try:
+            import playwright
+            print("✅ Dependencies installed successfully.")
+        except ImportError:
+            print("⚠️  Playwright installed but not immediately visible to Python path.")
+            print("   Attempting to refresh environment...")
+            # On some systems, we might need to use a slightly different approach or tell the user to restart
+            time.sleep(2)
+
     except Exception as e:
         print(f"❌ Error installing dependencies: {e}")
         print("Please ensure you have an active internet connection.")
-        sys.exit(1)
-
         sys.exit(1)
 
 def pre_flight_check():
@@ -86,33 +92,72 @@ def configure_api_key():
     return key
 
 def capture_cookies():
-    print("\n🍪 Step 2: NotebookLM Authentication")
-    print("A browser window will open. Please log into your Google Account.")
-    print("Once you see your NotebookLM dashboard, you can close the browser or wait for the script to finish.")
+    print("\n" + "-"*40)
+    print("🍪 Step 2: NotebookLM Authentication")
+    print("-" * 40)
+    print("1. [Auto] Open Browser & Capture (Recommended)")
+    print("2. [Manual] Paste Cookies manually (Use if Auto fails/Google blocks you)")
+    
+    choice = input("\nSelect Method (1/2) [Default: 1]: ").strip()
     
     auth_dir = Path.home() / ".notebooklm-mcp"
     auth_dir.mkdir(parents=True, exist_ok=True)
     auth_file = auth_dir / "auth.json"
+
+    if choice == "2":
+        print("\n🛠️  Manual Cookie Entry Mode")
+        print("1. Open NotebookLM in your regular browser (Chrome/Edge).")
+        print("2. Use a 'Cookie Editor' extension or DevTools to copy your cookies.")
+        print("3. Paste the JSON array or key-value object here:")
+        raw_cookie_data = input("\nPaste Cookie JSON: ").strip()
+        try:
+            parsed = json.loads(raw_cookie_data)
+            # Standardize format for our automator
+            auth_data = {"cookies": parsed}
+            with open(auth_file, "w") as f:
+                json.dump(auth_data, f, indent=4)
+            print(f"✅ Cookies saved successfully to {auth_file}")
+            return
+        except Exception as e:
+            print(f"❌ Invalid JSON: {e}")
+            return capture_cookies()
+
+    # Auto Mode with Stealth Hardening
+    print("\n🚀 Launching Stealth Browser...")
+    print("Please log into your Google Account in the window that appears.")
     
     try:
         from playwright.sync_api import sync_playwright
         
         with sync_playwright() as p:
-            # We use non-headless so user can log in
-            browser = p.chromium.launch(headless=False)
-            context = browser.new_context()
+            # STEALTH: Use common User Agent and disable automation flags
+            user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            if sys.platform == "win32":
+                user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+            browser = p.chromium.launch(
+                headless=False,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox"
+                ]
+            )
+            context = browser.new_context(user_agent=user_agent)
             page = context.new_page()
+            
+            # Additional stealth: Hide the WebDriver flag
+            page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
             page.goto("https://notebooklm.google.com/")
             
             print("⏳ Waiting for you to log in... (Timeout in 5 minutes)")
             
-            # Wait for any indicator of a logged-in state
             try:
-                # English or Chinese "New Notebook" indicators
+                # Wait for any indicator of a logged-in state
                 page.wait_for_selector("button:has-text('New Notebook'), button:has-text('建立新的筆記本'), .c6", timeout=300000)
+                print("✅ Login detected!")
             except:
-                print("⚠️ Login indicator not found. Proceeding with captured cookies if possible...")
+                print("⚠️  Login indicator timeout. Capturing current state anyway...")
             
             cookies = context.cookies()
             auth_data = {"cookies": cookies}
@@ -121,11 +166,13 @@ def capture_cookies():
                 json.dump(auth_data, f, indent=4)
             
             browser.close()
-            print(f"✅ Cookies captured and saved to {auth_file}")
+            print(f"✅ Cookies captured successfully.")
             
     except Exception as e:
-        print(f"❌ Error during cookie capture: {e}")
-        print("Make sure Playwright is correctly installed.")
+        print(f"❌ Error during auto-capture: {e}")
+        print("\n💡 Tip: Google might have blocked the automated browser.")
+        print("Try Method 2 [Manual] to bypass this.")
+        return capture_cookies()
 
 def setup_environment(api_key):
     print("\n📁 Step 3: Finalizing Configuration")
