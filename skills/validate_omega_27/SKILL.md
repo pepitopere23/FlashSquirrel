@@ -47,5 +47,3 @@ python3 scripts/grand_audit_v4.py
 
 ## Output Format
 Combines both reports into a single **Omega-27 Gold Certificate**.
-
-*Developed by the Chief Architect for the FlashSquirrel Global Ecosystem.*
