@@ -2,18 +2,24 @@ import os
 import json
 import sys
 import asyncio
-import difflib
+from typing import List, Optional, Dict, Any
 from playwright.async_api import async_playwright
 
-AUTH_FILE = os.path.expanduser("~/.notebooklm-mcp/auth.json")
+AUTH_FILE: str = os.path.expanduser("~/.notebooklm-mcp/auth.json")
 
-async def load_cookies():
+async def load_cookies() -> Optional[List[Dict[str, Any]]]:
+    """
+    Loads NotebookLM cookies from the MCP authentication file.
+    
+    Returns:
+        A list of cookie dictionaries or None if not found/invalid.
+    """
     if not os.path.exists(AUTH_FILE):
         return None
     try:
         with open(AUTH_FILE, 'r') as f:
             data = json.load(f)
-            cookies = []
+            cookies: List[Dict[str, Any]] = []
             if isinstance(data, dict) and "cookies" in data:
                 raw_cookies = data["cookies"]
                 if isinstance(raw_cookies, list):
@@ -33,26 +39,44 @@ async def load_cookies():
                             "secure": True
                         })
             return cookies
-    except:
+    except Exception:
         return None
 
-def get_mapping(map_file, topic):
+def get_mapping(map_file: str, topic: str) -> Optional[str]:
+    """
+    Retrieves the mapped notebook title for a given topic.
+    
+    Args:
+        map_file: Path to the mapping JSON file.
+        topic: The original topic/folder name to look up.
+        
+    Returns:
+        The mapped title string or None.
+    """
     if not os.path.exists(map_file):
         return None
     try:
         with open(map_file, 'r', encoding='utf-8') as f:
-            mapping = json.load(f)
+            mapping: Dict[str, str] = json.load(f)
             return mapping.get(topic)
-    except:
+    except Exception:
         return None
 
-def save_mapping(map_file, topic, notebook_title):
-    mapping = {}
+def save_mapping(map_file: str, topic: str, notebook_title: str) -> None:
+    """
+    Saves or updates the mapping between a topic and a notebook title.
+    
+    Args:
+        map_file: Path to the mapping JSON file.
+        topic: The original topic/folder name.
+        notebook_title: The final semantic title from NotebookLM.
+    """
+    mapping: Dict[str, str] = {}
     if os.path.exists(map_file):
         try:
             with open(map_file, 'r', encoding='utf-8') as f:
                 mapping = json.load(f)
-        except:
+        except Exception:
             pass
     mapping[topic] = notebook_title
     try:
@@ -60,8 +84,20 @@ def save_mapping(map_file, topic, notebook_title):
             json.dump(mapping, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"⚠️ Failed to save mapping: {e}")
+    return None
 
-async def create_and_upload(file_path, title_hint=None, map_file=None):
+async def create_and_upload(file_path: str, title_hint: Optional[str] = None, map_file: Optional[str] = None) -> str:
+    """
+    Orchestrates the Playwright automation to create/find a notebook and upload files.
+    
+    Args:
+        file_path: Path to the file to upload.
+        title_hint: Suggested title or original folder name.
+        map_file: Path to the metadata mapping file.
+        
+    Returns:
+        The final confirmed title of the notebook.
+    """
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()

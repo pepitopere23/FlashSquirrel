@@ -126,11 +126,11 @@ class ResearchPipeline:
         if not GEMINI_API_KEY:
             logging.error("GEMINI_API_KEY not found in .env")
             sys.exit(1)
+        self.root_dir: str = ROOT_DIR
         self.client = genai.Client(api_key=GEMINI_API_KEY)
         self.models_priority: List[str] = [
             'gemini-2.0-flash', 
             'gemini-1.5-flash',
-            'gemini-1.5-flash-8b', 
             'gemini-1.5-pro'       
         ]
 
