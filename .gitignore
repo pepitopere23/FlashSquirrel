@@ -10,6 +10,7 @@ dist/
 # 🔑 Secrets & Auth (VERY IMPORTANT)
 .env
 auth.json
+.notebook_map.json
 *.log
 chrome_profile_notebooklm/
 

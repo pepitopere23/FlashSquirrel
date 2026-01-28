@@ -465,8 +465,9 @@ class AsyncProcessor:
         logging.info(f"🤖 Automating NotebookLM for: {topic}")
         automator_script = os.path.join(os.path.dirname(__file__), "notebooklm_automator.py")
         
+        map_file = os.path.join(self.pipeline.root_dir, ".notebook_map.json")
         proc = await asyncio.create_subprocess_exec(
-            sys.executable, automator_script, upload_package_path, topic, 
+            sys.executable, automator_script, upload_package_path, topic, map_file,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await proc.communicate()
