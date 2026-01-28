@@ -84,11 +84,10 @@ async def create_and_upload(file_path, title_hint=None, map_file=None):
         for target in search_targets:
             if topic_found: break
             try:
-                # Use a specific selector for the notebook cards in the dashboard
-                # NotebookLM dashboard usually has cards with text
-                topic_link = page.get_by_text(target, exact=False).first
+                # Use exact matching to prevent accidental merging of different topics
+                topic_link = page.get_by_text(target, exact=True).first
                 if await topic_link.is_visible(timeout=3000):
-                    print(f"🔗 Found existing notebook for: {target}. Merging...")
+                    print(f"🔗 Found existing notebook with exact match for: {target}. Merging...")
                     await topic_link.click()
                     await page.wait_for_url("**/notebook/**", timeout=10000)
                     topic_found = True

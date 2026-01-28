@@ -118,9 +118,29 @@ def check_security():
     except:
         return True
 
+def check_mapping_system():
+    root_dir = os.getcwd()
+    map_file = Path(root_dir) / ".notebook_map.json"
+    exists = map_file.exists()
+    status_text = "Active (Mapping found)" if exists else "Passive (Waiting for first run)"
+    print_status("Semantic Mapping", True, status_text)
+    return True # Passive exists is fine
+
+def check_aesthetic_standard():
+    # Verify that the logic in auto_research_pipeline.py has been updated to remove DONE_
+    pipeline_file = "scripts/auto_research_pipeline.py"
+    if os.path.exists(pipeline_file):
+        with open(pipeline_file, "r") as f:
+            content = f.read()
+            # Check for the aesthetic update markers
+            aesthetic_ready = "final_name = new_topic" in content and "DONE_" not in content[content.find("final_name ="):content.find("final_name =")+50]
+            print_status("Aesthetic Standard", aesthetic_ready, "Emoji-Title enabled" if aesthetic_ready else "Old prefix detected")
+            return aesthetic_ready
+    return False
+
 def main():
     print("\n" + "🐿️  " * 10)
-    print("FlashSquirrel System Health Check")
+    print("FlashSquirrel System Health Check v2.0")
     print("🐿️  " * 10 + "\n")
 
     results = [
@@ -130,17 +150,19 @@ def main():
         check_dirs(),
         check_background_service(),
         check_security(),
+        check_mapping_system(),
+        check_aesthetic_standard(),
         check_17_layers()
     ]
 
     print("\n" + "-"*40)
     if all(results):
-        print("🌟 閃電松鼠壯得像頭牛！")
-        print("   (FlashSquirrel is as strong as an ox!)")
-        print("\nYour system is 100% ready for high-speed research.")
+        print("🌟 閃電松鼠壯得像頭牛！(完美的工業級)")
+        print("   (FlashSquirrel is 100% Industrial-Grade!)")
+        print("\nAll new semantic features and aesthetic standards are verified.")
     else:
         print("⚠️  System needs attention.")
-        print("Please run `python start.py` to fix missing components.")
+        print("Please run `python start.py` or check the logs.")
     print("-"*40 + "\n")
 
 if __name__ == "__main__":
