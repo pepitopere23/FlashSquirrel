@@ -131,6 +131,7 @@ async def create_and_upload(file_path, title_hint=None, map_file=None):
         
         final_title = "Untitled"
         try:
+            # Try to catch the title from the input field
             title_el = page.locator("input[aria-label='Notebook title']")
             if await title_el.count() == 0:
                  title_el = page.locator("input[aria-label='筆記本標題']")
@@ -141,6 +142,25 @@ async def create_and_upload(file_path, title_hint=None, map_file=None):
                 if "Untitled" in final_title or "未命名" in final_title:
                     await asyncio.sleep(10)
                     final_title = await title_el.input_value()
+            
+            # Aesthetic Enhancement: Try to find the leading emoji
+            # Usually in the notebook list or as a companion icon
+            # For now, if we are in the notebook, the title in the input might not have the emoji
+            # But we can capture it from the breadcrumbs or sidebar if available.
+            # Simplified: Use a default emoji based on name if not found, 
+            # or better: return to dashboard and find the card we just created.
+            
+            await page.goto("https://notebooklm.google.com/")
+            await asyncio.sleep(5)
+            # Find the card that matches our final_title
+            cards = await page.query_selector_all("mat-card")
+            for card in cards:
+                text = await card.inner_text()
+                lines = [l.strip() for l in text.split("\n") if l.strip()]
+                if len(lines) >= 3 and final_title in lines[2]:
+                    emoji = lines[0]
+                    final_title = f"{emoji} {lines[2]}"
+                    break
         except: pass
 
         if map_file and title_hint and final_title != "Untitled":

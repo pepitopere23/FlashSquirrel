@@ -481,19 +481,12 @@ class AsyncProcessor:
                 break
         
         if new_topic and new_topic != "Untitled" and "Success" not in new_topic and "Error" not in new_topic:
-            # Standardize with DONE_ prefix for processed folders
-            # Remove any recursive DONE_ or debug prefixes if topic was already messy
-            clean_base = topic
-            if "DONE_" in clean_base:
-                # Extract the original part if it was already renamed once
-                parts = clean_base.split("_")
-                if len(parts) > 1:
-                    clean_base = parts[-1]
+            # AESTHETIC UPDATE: Using raw semantic title (no DONE_ prefix)
+            final_name = new_topic
             
-            final_name = f"DONE_{new_topic}_{clean_base}"
             new_folder_path = RobustUtils.safe_rename(folder_path, final_name)
             if new_folder_path != folder_path:
-                logging.info(f"🏷️ Semantic Renamed: {folder_path} -> {new_folder_path}")
+                logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {new_folder_path}")
                 folder_path = new_folder_path
 
         await self.pipeline.generate_visualizations(content_to_push, folder_path)
