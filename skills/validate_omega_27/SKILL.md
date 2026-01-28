@@ -1,5 +1,5 @@
 ---
-name: validate-omega-27
+name: validate_omega_27
 description: >
   The Ultimate FlashSquirrel Omega-27 Industrial Certification.
   Combines 17 layers of Static excellence (Alpha) with 10 layers of Runtime fortress (Sigma).
@@ -13,9 +13,9 @@ user-invocable: true
 context: fork
 ---
 
-# Omega-27 Industrial Certification Skill
+# Omega-27 綜合工程認證 Skill
 
-The "Omega Grade" is the highest standard for AI-driven software development. It guarantees that the system is both a masterpiece of engineering and a fortress of reliability.
+Omega 認證是自動化軟體工程的最高驗證等級。它確保系統不僅在代碼層面具備專業性（Alpha 靜態審計），且在實際運行環境中具備高度可靠性（Sigma 運行驗證）。
 
 ## The Omega Equation
 **Omega Score = (Alpha Static * 0.6) + (Sigma Runtime * 0.4)**

@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 Industrial-Omega-27 Certifier
-The ultimate orchestrator for A (Static) + B (Dynamic) scales.
+Orchestratror for Static (Alpha) and Runtime (Sigma) validation scales.
 """
 
 import sys
@@ -14,7 +13,7 @@ sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 
 try:
     from scripts.validation_17_layers import validate_code_17_layers
-    from skills.Industrial_Sigma_10.scripts.validate_runtime_10 import validate_runtime_10_layers
+    from skills.validate_runtime_10.validator import validate_runtime_10_layers
 except ImportError:
     # Fallback for different folder structures
     def validate_code_17_layers(c, n): return {"quality_score": 0}

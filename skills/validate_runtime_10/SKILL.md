@@ -1,5 +1,5 @@
 ---
-name: validate-runtime-10
+name: validate_runtime_10
 description: >
   FlashSquirrel 10-Layer Runtime Validation System (Sigma Scale). 
   Ensures environment consistency, logic resilience, and goal fulfillment.
@@ -15,7 +15,7 @@ context: fork
 
 # FlashSquirrel 10-Layer Runtime Validation Skill (Sigma)
 
-Advanced runtime verification system for industrial-grade stability. Validates the "Sigma Scale" (L18-L27).
+專業級系統穩定性驗證系統。專注於「Sigma 運行量表」(L18-L27) 的自動化檢測。
 
 ## Usage
 
@@ -29,8 +29,8 @@ python3 scripts/validate_runtime_10.py
 
 ## Group 5: L18-L20 環境地基驗證 (Infrastructure)
 
-### L18: 執行路徑鎖定 (Runtime Lock)
-**What**: VENV and Python interpreter consistency.
+### L18: 執行路徑鎖定 (Runtime Consistency)
+**檢核點**: 驗證 VENV 與 Python 解釋器路徑的一致性。
 **Check**: Verify `sys.executable` matches project venv.
 **Pass**: VENV active and correct.
 **Fail**: "VENV 衝突或未激活".

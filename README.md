@@ -4,9 +4,9 @@
 > *"One Lightning Strike, A Forest of Wisdom."*
 
 ---
-### 🛡️ 隱私安全保證 | Privacy & Security Guarantee
-**「我們看不見你的任何資料。」** | **"We cannot see any of your data."**  
-FlashSquirrel 採用 **100% 本地化 / 零知識 (Zero-Knowledge)** 架構。你的思想與 API 密鑰僅鎖在你的電腦與 iCloud 中。  
+### 🛠️ 工業級認證 | Industrial Certification
+[![Industrial-27 Omega](https://img.shields.io/badge/Certification-Omega--27-gold?style=for-the-badge&logo=shield)](./docs/INDUSTRIAL_STANDARDS_27L.md)  
+**「通過 27 層自動化軟體工程驗證 (17 層靜態審計 + 10 層運行驗證)。」**
 
 ---
 

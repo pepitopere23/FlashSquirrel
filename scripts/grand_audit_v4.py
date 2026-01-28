@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
-FlashSquirrel Grand Audit v4.0 - Industrial Omega-27 Certification 🐿️🛡️🏆
-The definitive 27-Layer Standard (17 Static + 10 Runtime).
+FlashSquirrel Industrial Audit v4.0
+Automated Validation for the 27-Layer Engineering Standard (Alpha + Sigma).
 """
 
 import os
@@ -95,9 +94,9 @@ def audit_10_layers_runtime():
     return runtime_score >= 80, runtime_score
 
 def main():
-    print("\n" + "🌟 " * 15)
-    print("FLASH SQUIRREL - OMEGA-27 INDUSTRIAL CERTIFICATION")
-    print("🌟 " * 15)
+    print("\n" + "-" * 40)
+    print("FLASH SQUIRREL: OMEGA-27 ENGINEERING AUDIT")
+    print("-" * 40)
     
     static_pass, static_score = audit_17_layers_static()
     runtime_pass, runtime_score = audit_10_layers_runtime()
@@ -109,13 +108,13 @@ def main():
     print("="*60)
     
     if static_pass and runtime_pass:
-        print("\n" + "🏁 " * 20)
-        print("CERTIFICATION: FLASH SQUIRREL IS 100% INDUSTRIAL OMEGA GRADE")
-        print("🏁 " * 20 + "\n")
+        print("\n" + "=" * 40)
+        print("AUDIT SUCCESS: SYSTEM COMPLIES WITH OMEGA-27 STANDARDS")
+        print("=" * 40 + "\n")
     else:
-        print("\n" + "❌ " * 20)
-        print("CERTIFICATION FAILED: System does not meet Omega standards.")
-        print("❌ " * 20 + "\n")
+        print("\n" + "!" * 40)
+        print("AUDIT FAILED: NON-COMPLIANCE DETECTED")
+        print("!" * 40 + "\n")
         sys.exit(1)
 
 if __name__ == "__main__":

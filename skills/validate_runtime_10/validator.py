@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 Industrial-Sigma-10 Runtime Validator
-A generic 10-layer runtime check for industrial projects.
+Comprehensive 10-layer runtime check for industrial software engineering.
 """
 
 import os
@@ -15,9 +14,9 @@ def validate_runtime_10_layers(context: Dict[str, Any] = None) -> Dict[str, Any]
     Executes the 10-layer Sigma runtime check.
     
     Layers:
-    L18-L20: Infrastructure
-    L21-L24: Logic Resilience
-    L25-L27: Goal Fulfillment
+    L18-L20: Infrastructure Verification
+    L21-L24: Runtime Resilience
+    L25-L27: Goal & Spec Alignment
     """
     results = []
     
