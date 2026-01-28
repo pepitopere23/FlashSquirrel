@@ -257,7 +257,7 @@ class ResearchPipeline:
         3. Challenge the thesis: Find counter-arguments and alternative perspectives.
         
         [OUTPUT FORMAT (Strict Markdown)]
-        # [Study Title] / [研究標題]
+        # [研究標題] / [Study Title]
         > **Confidence Score**: [0-100]% (If < 70%, add "⚠️ Human Review Recommended")
         
         ## 1. Executive Summary / 執行摘要
