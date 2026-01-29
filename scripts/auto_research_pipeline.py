@@ -56,19 +56,31 @@ class RobustUtils:
     """Utility class for cross-platform file and iCloud synchronization handling."""
     
     @staticmethod
+    def is_file_stable(file_path: str, wait_time: float = 2.0) -> bool:
+        """
+        Ensures a file is fully written by checking if its size is stable.
+        This handles iCloud, Dropbox, and partial writes from other sync tools.
+        """
+        if not os.path.exists(file_path): return False
+        try:
+            initial_size = os.path.getsize(file_path)
+            time.sleep(wait_time)
+            final_size = os.path.getsize(file_path)
+            # If size is > 0 and hasn't changed, it's likely stable
+            return initial_size == final_size and final_size > 0
+        except Exception:
+            return False
+
+    @staticmethod
     def wait_for_icloud_download(file_path: str, timeout: int = 60) -> str:
         """
         Detects if a file is a .icloud placeholder and waits for download.
-        
-        Args:
-            file_path: The path to the potential .icloud file.
-            timeout: Maximum seconds to wait for download.
-            
-        Returns:
-            The final resolved path (without .icloud).
+        Includes a stability check to ensure partial writes are finished.
         """
         if os.path.exists(file_path) and not file_path.endswith('.icloud'):
-            return file_path
+            # Even for non-iCloud, check stability (for Dropbox/Telegram)
+            if RobustUtils.is_file_stable(file_path):
+                return file_path
             
         target_path = file_path
         if file_path.endswith('.icloud'):
@@ -83,12 +95,12 @@ class RobustUtils:
         start_time = time.time()
         while time.time() - start_time < timeout:
             if os.path.exists(target_path):
-                if os.path.getsize(target_path) > 0:
-                    logging.info(f"✅ iCloud Download Complete: {target_path}")
+                if RobustUtils.is_file_stable(target_path):
+                    logging.info(f"✅ Sync/Download Complete: {target_path}")
                     return target_path
-            time.sleep(2)
+            time.sleep(1)
             
-        logging.warning(f"⚠️ iCloud Download Timeout: {target_path}")
+        logging.warning(f"⚠️ Sync Timeout: {target_path}")
         return target_path
 
     @staticmethod
@@ -306,8 +318,10 @@ class ResearchPipeline:
         """
 
         try:
-            # Multi-layered Sync Buffer for Shortcuts/iCloud (Phase D Enhancement)
-            time.sleep(2) 
+            # Phase D+: Robust Sync Wait (Stability Guard)
+            file_path = RobustUtils.wait_for_icloud_download(file_path)
+            if not os.path.exists(file_path):
+                 return None
             
             mime = self.get_mime_type(file_path)
             content_part = None
