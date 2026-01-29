@@ -40,12 +40,12 @@
 
 ### 第五階段：基礎環境驗證 (Infrastructure)
 *   **L18 - 執行路徑鎖定 (Runtime Consistency)**：驗證虛擬環境與解釋器路徑，確保與開發環境一致。
-*   **L19 - 外部資源連通性 (Resource Connectivity)**：驗證 API Key、資料庫與網路服務的加載與連線狀態。
+*   **L19 - 外部資源連通性 (Resource Connectivity)**：驗證 API Key、資料庫、與 **Cookie/Session 認證令牌**的加載與連線狀態。
 *   **L20 - 持久化權限校驗 (IO Permission)**：確保在指定目錄（如 iCloud 或受限文件系統）具備寫入與讀取權限。
 
 ### 第六階段：邏輯彈性與穩定性 (Resilience)
 *   **L21 - 並發與競爭狀態防護 (Concurrency Safety)**：檢查異步鎖定或隊列機制，防止數據競爭。
-*   **L22 - 異常退避與錯誤處理 (Error Recovery)**：驗證網路延遲、限流或服務中斷時的重試與退避邏輯。
+*   **L22 - 異常退避與錯誤處理 (Error Recovery)**：驗證網路延遲、限流、或 **Anti-Bot 認證失效**時的重試、退避與「備援人工介入」(Human-in-the-loop) 邏輯。
 *   **L23 - 數據容錯與健壯性 (Robustness)**：驗證對異常編碼、極值或非法輸入的預期處理能力。
 *   **L24 - 跨服務數據一致性 (Data Consistency)**：確保本地狀態與第三方服務（如 Cloud API）之間的語義同步。
 

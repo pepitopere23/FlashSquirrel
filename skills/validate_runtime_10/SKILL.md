@@ -36,10 +36,10 @@ python3 scripts/validate_runtime_10.py
 **Fail**: "VENV 衝突或未激活".
 
 ### L19: 外部資源握手 (Resource Handshake)
-**What**: API Key & dependency connectivity.
-**Check**: ping/mock call to Gemini/DB.
-**Pass**: Connectivity verified.
-**Fail**: "API 或資料庫連線失敗".
+**What**: API Key & dependency connectivity (including Cookie/Session tokens).
+**Check**: ping/mock call to Gemini/DB + validate browser cookie strings.
+**Pass**: All external resources and auth tokens verified.
+**Fail**: "API、資料庫或認證令牌失效".
 
 ### L20: 持久化與 IO 權限 (IO Guard)
 **What**: File system write permissions.
@@ -58,10 +58,10 @@ python3 scripts/validate_runtime_10.py
 **Fail**: "缺少併發鎖或競態防修護".
 
 ### L22: 異常退避與自癒 (Backoff Strategy)
-**What**: Retry and exponential backoff.
-**Check**: Presence of `retry` or `wait` loop in API calls.
-**Pass**: Resilience verified.
-**Fail**: "缺少錯誤重試機制".
+**What**: Retry logic and **Anti-Bot Fallback**.
+**Check**: Presence of `retry` loops AND human-in-the-loop fallback (e.g., cookie pasting UI).
+**Pass**: Automated backoff verified AND manual override available.
+**Fail**: "系統在攔截點死掉且無手動授權機制".
 
 ### L23: 數據畸變抗性 (Anomaly Tolerance)
 **What**: Handling malformed data/emojis.

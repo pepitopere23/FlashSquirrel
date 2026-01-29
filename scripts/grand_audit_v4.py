@@ -64,9 +64,14 @@ def audit_10_layers_runtime():
     print(f"{'✅' if ok_l18 else '❌'} L18 Runtime Lock (VENV Consistency)")
     checks.append(ok_l18)
     
-    # L19: Resource Handshake (Gemini connectivity)
-    ok_l19, _ = run_step("L19 API Handshake (Gemini Connectivity)", [python_to_use, "-c", "import google.genai; print('ok')"])
-    checks.append(ok_l19)
+    # L19: Resource Handshake (Gemini & Auth Connectivity)
+    ok_l19_api, _ = run_step("L19 API Handshake (Gemini)", [python_to_use, "-c", "import google.genai; print('ok')"])
+    
+    auth_file = os.path.expanduser("~/.notebooklm-mcp/auth.json")
+    ok_l19_auth = os.path.exists(auth_file)
+    print(f"{'✅' if ok_l19_auth else '⚠️'} L19 Auth Handshake (Cookie/Token Presence)")
+    
+    checks.append(ok_l19_api and ok_l19_auth)
     
     # L20: Path Accuracy (iCloud/Local)
     from dotenv import load_dotenv
@@ -84,6 +89,11 @@ def audit_10_layers_runtime():
         exact_check = "exact=True" in content
         print(f"{'✅' if exact_check else '❌'} L23 Data Anomaly Tolerance (Exact Match Logic)")
         checks.append(exact_check)
+        
+        # L22: Error Recovery / Anti-Bot Fallback
+        fallback_check = "load_cookies" in content or "fix_auth.sh" in content
+        print(f"{'✅' if fallback_check else '⚠️'} L22 Anti-Bot Resilience (Cookie Fallback Logic)")
+        checks.append(fallback_check)
         
     # L26: Metadata Persistence
     ok_l26 = "save_mapping" in content
