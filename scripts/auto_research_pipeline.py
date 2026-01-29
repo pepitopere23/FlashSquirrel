@@ -554,7 +554,9 @@ class InputHandler(FileSystemEventHandler):
             return
         
         # Check extensions
-        if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): 
+        supported_exts = ('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud', '.webloc', '.url', '.html')
+        if not file_path.lower().endswith(supported_exts):
+            logging.warning(f"⚠️ File ignored: {basename} (Unsupported extension)")
             return
 
         # Topic Assignment Logic
@@ -579,8 +581,12 @@ class InputHandler(FileSystemEventHandler):
         parts = rel_path.split(os.sep)
         if len(parts) == 2 and parts[0] == "input_thoughts":
             stem = os.path.splitext(basename)[0]
-            # Sanitize stem for folder name
+            # Sanitize stem: replace newlines with space, remove invalid chars
+            stem = stem.replace("\n", " ").replace("\r", " ")
             stem = "".join([c for c in stem if c.isalnum() or c in (" ", "_", "-")]).strip()
+            # Truncate to prevent extremely long folder names
+            if len(stem) > 60:
+                stem = stem[:57] + "..."
             if not stem: stem = "Untitled_Research"
             
             logging.info(f"🃏 Inbox item detected: {basename}. Packing into dedicated folder: {stem}")
@@ -595,6 +601,8 @@ class InputHandler(FileSystemEventHandler):
                 return
 
         logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
+        # Give time for Shortcuts or iCloud to finish moving/downloading
+        time.sleep(1) 
         self.processor.add_task(file_path)
         return None
 
@@ -613,7 +621,8 @@ async def scan_existing_files(processor: AsyncProcessor) -> None:
             if os.path.basename(file_path).startswith('.') and not file_path.endswith('.icloud'): 
                 continue
             
-            if not file_path.lower().endswith(('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud')): 
+            supported_exts = ('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud', '.webloc', '.url', '.html')
+            if not file_path.lower().endswith(supported_exts): 
                 continue
             if "report_" in file or "visualizations_" in file or "MASTER_SYNTHESIS" in file or "upload_package" in file_path: 
                 continue

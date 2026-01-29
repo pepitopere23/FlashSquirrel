@@ -571,18 +571,34 @@ def validate_l16_security(code: str) -> Dict:
         issues = []
         
         # 1. 檢查危險函數調用
+        dangerous_funcs = ['eval', 'exec', 'pickle', 'os.system', 'subprocess.Popen']
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 func_name = ""
                 if isinstance(node.func, ast.Name):
                     func_name = node.func.id
                 elif isinstance(node.func, ast.Attribute):
-                    func_name = node.func.attr
+                    if isinstance(node.func.value, ast.Name):
+                        func_name = f"{node.func.value.id}.{node.func.attr}"
+                    else:
+                        func_name = node.func.attr
                 
-                if func_name in ['eval', 'exec', 'pickle']:
+                if func_name in dangerous_funcs:
                     issues.append(f"使用了危險函數: {func_name}")
-                    
-        # 2. 搜尋潛在的寫死 Secret (簡單正則)
+
+        # 2. [L16.2] 新增：路徑安全性偵測 (Path Sanitization)
+        path_ops = ['mkdir', 'makedirs', 'rename', 'replace', 'move', 'remove']
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                if node.func.attr in path_ops:
+                    if node.args:
+                        arg = node.args[0]
+                        if isinstance(arg, ast.Name):
+                            code_snippet = code.split('\n')[node.lineno-1]
+                            if not any(cleaner in code_snippet for cleaner in ['.strip()', '.replace(', 'safe_', 'sanitize']):
+                                issues.append(f"L16.2 危險路徑操作: '{node.func.attr}' 的參數 '{arg.id}' 未偵測到清洗邏輯")
+
+        # 3. 搜尋潛在的寫死 Secret
         secret_patterns = [r'api_key\s*=\s*[\'"][^\s*]{10,}[\'"]', r'password\s*=\s*[\'"][^\s*]{8,}[\'"]']
         for pattern in secret_patterns:
             if re.search(pattern, code, re.IGNORECASE):

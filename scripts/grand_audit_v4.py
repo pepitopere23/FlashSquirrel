@@ -74,8 +74,11 @@ def audit_10_layers_runtime():
     checks.append(ok_l19_api and ok_l19_auth)
     
     # L20: Path Accuracy (iCloud/Local)
-    from dotenv import load_dotenv
-    load_dotenv()
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
     root_dir = os.getenv("RESEARCH_ROOT_DIR")
     ok_l20 = os.path.exists(root_dir) if root_dir else True
     print(f"{'✅' if ok_l20 else '⚠️'} L20 Path Accuracy (iCloud/Local)")

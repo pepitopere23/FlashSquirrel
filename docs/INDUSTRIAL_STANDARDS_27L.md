@@ -1,60 +1,30 @@
-# 🌐 Industrial-27：自動化軟體工程驗證標準 (L1-L27)
-**「涵蓋代碼品質與運行穩定性的綜合驗證協議」**
+# Industrial-27: Engineering Standards for AI Automation
 
-本標準由 **Alpha (17 層靜態審計)** 與 **Sigma (10 層運行驗證)** 構成，旨在確保 AI 生成的代碼符合生產環境標準，並具備可靠的錯誤處理與環境適應能力。
-
----
-
-## 🏛️ PART A: Alpha 17-Layer (靜態驗證量表)
-**目標：確保代碼具備「工程美學」與「高可維護性」。**
-
-### 第一階段：結構與語法 (L1-L4)
-*   **L1 - 基礎語法完整性**：代碼必須符合標準語法規範，無低級語法錯誤。
-*   **L2 - AST 結構定義**：函數與類別定義必須清晰，抽象語法樹 (AST) 完整。
-*   **L3 - 縮進與格式標準**：嚴格遵守 PEP8 或行業縮進規範（如 4 空格），無混合排版。
-*   **L4 - 命名語義規範**：變數、函數、類別命名必須具備強語義化，拒絕 Vibe Coding。
-
-### 第二階段：簽名與文檔 (L5-L8)
-*   **L5 - 參數合約檢查**：輸入參數必須與開發規格書 100% 匹配。
-*   **L6 - 明確返回值約定**：所有路徑必須有顯式 Return/Yield，杜絕隱性 None。
-*   **L7 - 高覆蓋類型提示 (Type Hints)**：關鍵邏輯必須包含類型標註。
-*   **L8 - 文檔字符串覆蓋 (Docstrings)**：公有接口必須包含用途、參數與異常說明。
-
-### 第三階段：依賴與安全性 (L9-L12)
-*   **L9 - 顯式導入管理**：所有依賴必須顯式聲明，杜絕隱性全局調用。
-*   **L10 - 標準庫優選層**：優先使用標準庫，減少不必要的代碼膨脹。
-*   **L11 - 第三方庫版本控制**：嚴格鎖定依賴版本，防止供應鏈污染。
-*   **L12 - 循環依賴探測**：嚴禁相對導入導致的循環依賴。
-
-### 第四階段：邏輯與防禦 (L13-L17)
-*   **L13 - 類型一致性深度校驗**：內部運算必須符合類型推導邏輯。
-*   **L14 - 邏輯完整性測試**：分支處理（if/else）必須覆蓋所有邊界情況。
-*   **L15 - 非空錯誤處理塊**：嚴禁 bare `except: pass`，必須有錯誤捕獲或日誌。
-*   **L16 - 安全漏洞掃描**：禁止 eval/exec 非過濾輸入，屏蔽 Secret 寫死。
-*   **L17 - 性能與循環嵌套限制**：嚴禁過深的循環嵌套，確保運算效率。
+Comprehensive validation protocol ensuring architectural integrity and runtime stability for autonomous research systems.
 
 ---
 
-## 🛡️ PART B: Sigma 10-Layer (運行驗證量表)
-**目標：確保系統在真實生產環境下的穩定性與健壯性。**
-
-### 第五階段：基礎環境驗證 (Infrastructure)
-*   **L18 - 執行路徑鎖定 (Runtime Consistency)**：驗證虛擬環境與解釋器路徑，確保與開發環境一致。
-*   **L19 - 外部資源連通性 (Resource Connectivity)**：驗證 API Key、資料庫、與 **Cookie/Session 認證令牌**的加載與連線狀態。
-*   **L20 - 持久化權限校驗 (IO Permission)**：確保在指定目錄（如 iCloud 或受限文件系統）具備寫入與讀取權限。
-
-### 第六階段：邏輯彈性與穩定性 (Resilience)
-*   **L21 - 並發與競爭狀態防護 (Concurrency Safety)**：檢查異步鎖定或隊列機制，防止數據競爭。
-*   **L22 - 異常退避與錯誤處理 (Error Recovery)**：驗證網路延遲、限流、或 **Anti-Bot 認證失效**時的重試、退避與「備援人工介入」(Human-in-the-loop) 邏輯。
-*   **L23 - 數據容錯與健壯性 (Robustness)**：驗證對異常編碼、極值或非法輸入的預期處理能力。
-*   **L24 - 跨服務數據一致性 (Data Consistency)**：確保本地狀態與第三方服務（如 Cloud API）之間的語義同步。
-
-### 第七階段：功能交付與目標達成 (Delivery)
-*   **L25 - 產品規範一致性 (Spec Alignment)**：驗證最終輸出（格式、標題、數據結構）是否符合產品需求。
-*   **L26 - 元數據持久化驗證 (Persistence Lock)**：確保系統在重啟後能恢復 Context 與歷史記錄。
-*   **L27 - 終極目標達成度驗證 (End-to-End Goal)**：驗證用戶的核心需求是否在最後產出中完整實現。
+## Phase A: Alpha Scale (Static Quality Audit)
+**Origin: BlueMouse Core Standard**
+*   **Target**: Structural integrity and semantic safety.
+*   **L1-L4**: Code architecture and AST compliance.
+*   **L16 [Security]**: Advanced path sanitization and dangerous function detection.
 
 ---
 
-## 🏆 Certification: Omega-27 (綜合工程認證)
-當專案同時通過 **Alpha (17L 靜態)** 與 **Sigma (10L 運行)** 驗證，即具備 **Omega-27 生產就緒認證**，代表該系統符合高標準的自動化軟體工程規範。
+## Phase B: Beta Scale (Sigma Runtime Validation)
+**Project: FlashSquirrel Dynamics**
+*   **Target**: Runtime resilience and environmental stability.
+*   **L18-L20**: Distributed environment lock (VENV, iCloud, API).
+*   **L23 [Robustness]**: Chaos testing for multiline/anomalous inputs.
+
+---
+
+## Phase C: Omega-27 (Holistic Certification)
+**Result: Industrial Grade Deployment**
+*   **Integration**: Merging Phase A (Static) and Phase B (Dynamic) into a singular quality metric.
+*   **Scoring**: Weighted average (Static 60% / Dynamic 40%) for Omega certification.
+Systems meeting both Alpha and Sigma requirements are certified for production deployment.
+
+*Last Revision: 2026-01-29*
+*Standards Unit*

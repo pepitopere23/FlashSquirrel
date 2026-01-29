@@ -48,14 +48,15 @@ def setup_mac():
         print(f"⚠️ Service created but not yet active. (Wait for login or check permissions)")
 
     print(f"   (Service file created at: {dest_path})")
-    print("\n" + "!"*60)
-    print("🍎 CRITICAL macOS PERMISSION REQUIRED:")
-    print("Because this runs in the background, it will fail SILENTLY if you don't")
-    print("grant 'Full Disk Access' to your Terminal/IDE.")
-    print("1. Go to System Settings -> Privacy & Security -> Full Disk Access.")
-    print("2. Ensure 'Terminal' is ON.")
-    print("3. Restart your Mac or log out/in to ensure the background service picks it up.")
-    print("!" * 60 + "\n")
+    print("\n" + "🚨" * 20)
+    print("🍎 CRITICAL macOS PERMISSION REQUIRED (Full-Auto Mode):")
+    print("FlashSquirrel runs in the background to monitor your iCloud/Folders.")
+    print("It will fail SILENTLY if you don't grant permission:")
+    print("\n1. Open System Settings -> Privacy & Security -> Full Disk Access.")
+    print("2. Click the [+] button or find 'Terminal' (or your Code Editor).")
+    print("3. Ensure the switch is ON.")
+    print("4. Restart your Mac or log out/in to activate the background watcher.")
+    print("🚨" * 20 + "\n")
 
 def setup_windows():
     print("🪟 Setting up Windows Task Scheduler...")
