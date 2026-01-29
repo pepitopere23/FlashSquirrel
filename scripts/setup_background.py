@@ -34,11 +34,6 @@ def setup_mac():
     # Precise replacement using tokens
     content = content.replace("{{PROJECT_ROOT}}", project_root)
     content = content.replace("{{VENV_PYTHON}}", python_path)
-    
-    # Legacy Fallback (for existing installs matching the creator's path)
-    if "/Users/chenpeijun" in content:
-        content = content.replace("/Users/chenpeijun/research_pipeline/.venv/bin/python3", python_path)
-        content = content.replace("/Users/chenpeijun/Desktop/研究工作流", project_root)
 
     with open(dest_path, "w") as f:
         f.write(content)
