@@ -3,5 +3,5 @@ python-dotenv
 watchdog
 playwright
 asyncio
-pathlib
+
 python-docx
