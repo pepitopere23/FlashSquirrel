@@ -1,6 +1,0 @@
-Would remove full_file_inventory.txt
-Would remove scripts/surgical_cleanup.sh
-Would remove simulation_github_download.zip
-Would remove temp_audit.py
-Would remove temp_stress_test/mock_pipeline.py
-Would remove untracked_vulnerabilities.txt
