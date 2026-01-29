@@ -118,6 +118,31 @@ class RobustUtils:
             logging.error(f"❌ Rename Failed: {e}")
             return old_path
 
+class LinkParser:
+    """Utility to extract URLs from link files (.webloc, .url)."""
+    
+    @staticmethod
+    def extract_url(file_path: str) -> Optional[str]:
+        """Extracts the first valid URL found in the file."""
+        ext = os.path.splitext(file_path)[1].lower()
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            
+            if ext == ".webloc":
+                # Basic XML search to avoid heavy plistlib for a single string
+                import re
+                match = re.search(r"<string>(https?://[^<]+)</string>", content)
+                return match.group(1) if match else None
+            elif ext == ".url":
+                # INI style search
+                import re
+                match = re.search(r"URL=(https?://[^\s\a\b]+)", content)
+                return match.group(1) if match else None
+        except Exception as e:
+            logging.error(f"🔗 Link extraction failed: {e}")
+        return None
+
 class ResearchPipeline:
     """The central engine for processing research folders and generating Gemini reports."""
     
@@ -252,9 +277,12 @@ class ResearchPipeline:
         [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
         
         Task: 
-        1. Analyze the provided input (text/image/PDF) to extract the core thesis.
+        1. Analyze the provided input (text/image/PDF/URL) to extract the core thesis.
         2. Perform an extensive Google Search (using Grounding) to validate this thesis against LATEST 2024-2026 data.
         3. Challenge the thesis: Find counter-arguments and alternative perspectives.
+        
+        [INPUT CONTEXT]
+        {input_context_label}
         
         [OUTPUT FORMAT (Strict Markdown)]
         # [研究標題] / [Study Title]
@@ -279,17 +307,36 @@ class ResearchPipeline:
         """
 
         try:
+            # Multi-layered Sync Buffer for Shortcuts/iCloud (Phase D Enhancement)
+            time.sleep(2) 
+            
             mime = self.get_mime_type(file_path)
             content_part = None
+            input_context_label = f"Primary Input File: {filename}"
             
-            if mime.startswith('image') or mime == 'application/pdf':
-                with open(file_path, "rb") as f:
-                    content_part = {'mime_type': mime, 'data': f.read()}
-            else:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content_part = f.read()
+            # Semantic Link Processing
+            if filename.lower().endswith(('.webloc', '.url')):
+                extracted_url = LinkParser.extract_url(file_path)
+                if extracted_url:
+                    logging.info(f"🌐 [Phase D] Semantic Link detected: {extracted_url}")
+                    content_part = f"Research Topic: {filename}\nSource URL: {extracted_url}\nPlease strictly visit and analyze the content of this URL."
+                    input_context_label = f"Target Web Link: {extracted_url}"
+                else:
+                    logging.warning(f"⚠️ Fallback to file content (Link extraction failed): {filename}")
+
+            if not content_part:
+                if mime.startswith('image') or mime == 'application/pdf':
+                    with open(file_path, "rb") as f:
+                        content_part = {'mime_type': mime, 'data': f.read()}
+                else:
+                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content_part = f.read()
+
             logging.info(f"📡 [Phase 1] Launching Gemini Research for: {filename}...")
-            response: Any = await self.generate_with_fallback(prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
+            # Re-format prompt with labels
+            final_prompt = prompt.format(input_context_label=input_context_label)
+            
+            response: Any = await self.generate_with_fallback(final_prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
             
             if not response or not response.text:
                 return None
