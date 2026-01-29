@@ -112,7 +112,7 @@ graph TD
     end
 ```
 
-*(詳見 [系統架構手冊](./系統架構手冊.md))*
+*(詳見 [系統架構手冊](./SYSTEM_ARCHITECTURE_TW.md))*
 
 ---
 
@@ -203,7 +203,7 @@ graph TD
 
 本專案採 **AGPLv3** 協議開源。企業如有商業化需求或涉及 MCP 格式大規模應用，請務必先與作者聯繫說明。
 
-詳見 [常問問題 (FAQ)](./docs/FAQ.md)、[生活化流程手冊](./docs/LIFESTYLE_WORKFLOW.md) 與 [系統架構手冊](./系統架構手冊.md)。
+詳見 [常問問題 (FAQ)](./docs/FAQ.md)、[生活化流程手冊](./docs/LIFESTYLE_WORKFLOW.md) 與 [系統架構手冊](./SYSTEM_ARCHITECTURE_TW.md)。
 
 ## ✨ Report Capabilities
 *   **Multilingual Support**: Masterfully handles **Traditional Chinese** and **English** to produce high-quality bilingual reports.
@@ -310,7 +310,7 @@ First time exploring? Don't worry about any technical setup. Just open the app a
 
 > [!IMPORTANT]
 > **💡 FAQ & Technical Notes**
-> *   **Folder Generation**: Simply run `start.py` and press **Enter**; the system will auto-generate the structure in your iCloud. We recommend creating the main "研究工作流" folder first for immediate mobile use.
+> *   **Folder Generation**: Simply run `start.py` and press **Enter`; the system will auto-generate the structure in your iCloud. We recommend creating the main "研究工作流" folder first for immediate mobile use.
 > *   **Sync Latency**: Ensure you have enabled **"Full Disk Access"** for your **Terminal** app (System Settings -> Privacy & Security). **Restart your Terminal after enabling this.** iCloud sync typically has a 5-30s response time.
 
 ### 3. Windows & Cross-Platform
@@ -331,4 +331,4 @@ First time exploring? Don't worry about any technical setup. Just open the app a
 
 Licensed under **AGPLv3**. For commercial use or large-scale MCP integration, please contact the author beforehand.
 
-See [Lifestyle Workflow Guide](./docs/LIFESTYLE_WORKFLOW.md) and [Technical Manual](./系統架構手冊.md) for more details.
+See [Lifestyle Workflow Guide](./docs/LIFESTYLE_WORKFLOW.md) and [Technical Manual](./SYSTEM_ARCHITECTURE_TW.md) for more details.
