@@ -85,6 +85,37 @@ async def scan_notebooks():
             print("\n💡 Suggestion: Please open NotebookLM in your browser and delete the redundant ones.")
         else:
             print("\n✅ No simple duplicates found (exact name matches).")
+        
+        print(f"📊 Scan Complete: Found {len(notebooks)} notebooks.")
+        
+        print("\n📋 FULL NOTEBOOK LIST (Title | Metadata):")
+        
+        # Robustly wait for cards
+        try:
+            await page.wait_for_selector("mat-card, .notebook-grid-item", timeout=10000)
+        except:
+            print("⚠️ Timeout waiting for notebook cards. Page might be empty or loading slow.")
+
+        # Go through cards again to get full text
+        cards = await page.query_selector_all("mat-card") # NotebookLM uses mat-cards usually
+        
+        # If no mat-cards, try generic grid items
+        if not cards:
+            cards = await page.query_selector_all(".notebook-grid-item")
+
+        debug_list = []
+        for i, card in enumerate(cards):
+            try:
+                text = await card.inner_text()
+                clean_text = text.replace("\n", " | ")
+                print(f"  [{i+1}] {clean_text}")
+                debug_list.append(clean_text)
+            except Exception as e:
+                print(f"  [{i+1}] <Error reading card: {e}>")
+
+        # Heuristic for user:
+        # If we see duplicates, the one with "Just now" or today's timestamp is the KEEPER.
+        # The one with older dates is the DELETE.
 
 if __name__ == "__main__":
     asyncio.run(scan_notebooks())

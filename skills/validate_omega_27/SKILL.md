@@ -2,7 +2,7 @@
 name: validate_omega_27
 description: >
   The Ultimate FlashSquirrel Omega-27 Industrial Certification.
-  Combines 17 layers of Static standards (Alpha) with 10 layers of Runtime stability (Sigma).
+  Combines 17 layers of Static standards (Alpha) with 10 layers of Dynamic stability (Sigma).
   Triggers: "omega audit", "27層驗證", "industrial certification", "omega score"
 allowed-tools:
   - Read

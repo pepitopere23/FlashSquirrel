@@ -4,3 +4,4 @@ watchdog
 playwright
 asyncio
 pathlib
+python-docx

@@ -37,18 +37,21 @@ def cleanup():
             if not os.path.isdir(item_path): continue
             if item in ["scripts", "docs", "skills", "chrome_profile_notebooklm", "input_thoughts", "processed_reports"]: continue
             
+            # PHASE K UPDATE: NON-DESTRUCTIVE MODE
+            # We no longer deleting anything automatically.
+            # Just log what WOULD have been cleaned.
+            
             # Check for source files in this folder
             sources = [f for f in os.listdir(item_path) if not f.startswith(("report_", ".", "visualizations_", "upload_", "MASTER_", "RESEARCH_"))]
             
-            # AGGRESSIVE PURGE (Phase I): Any folder containing 'Untitled' or '未命名' that is redundant
             if "Untitled notebook" in item or "未命名筆記本" in item or "Untitled_Research" in item:
-                logging.info(f"🗑️ Found explosion debris folder: {item}")
-                targets_for_deletion.append(item_path)
+                logging.info(f"🔍 [Audit Only] Found potential debris: {item} (Action: IGNORE)")
+                # targets_for_deletion.append(item_path) # DISABLED
                 continue
 
             if not sources:
-                logging.info(f"🗑️ Found empty/invalid research folder: {item}")
-                targets_for_deletion.append(item_path)
+                logging.info(f"🔍 [Audit Only] Found empty folder: {item} (Action: IGNORE)")
+                # targets_for_deletion.append(item_path) # DISABLED
                 continue
                 
             source_fingerprint = f"{item}_{sources[0]}" # Simple heuristic
@@ -58,17 +61,17 @@ def cleanup():
             else:
                 scanned_sources.add(source_fingerprint)
 
-    # 2. Delete redundant folders
+    # 2. Delete redundant folders (DISABLED FOR SAFETY)
     if not targets_for_deletion:
         logging.info("✨ No redundant folders found. System is relatively clean.")
         return
 
-    print(f"\n⚠️ Found {len(targets_for_deletion)} redundant folders.")
-    confirm = "y" # Auto-confirm for the user to save time, but I'll be careful
+    print(f"\n⚠️ Found {len(targets_for_deletion)} redundant folders (Audit Only).")
+    # confirm = "y" 
     
     for target in targets_for_deletion:
-        logging.info(f"🔥 Deleting: {target}")
-        shutil.rmtree(target, ignore_errors=True)
+        logging.info(f"🚫 [WOULD DELETE] {target} (Action: PREVENTED)")
+        # shutil.rmtree(target, ignore_errors=True)
     
     logging.info("💪 Cleanup Complete. Explosion contained.")
 
