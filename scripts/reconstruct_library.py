@@ -7,11 +7,19 @@ from typing import List, Dict
 import subprocess
 
 # Configuration
-ROOT_DIR = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
+# Configuration: Dynamic Discovery for "Black Box" transparency
+def get_default_root() -> str:
+    """Detects the default research root based on OS."""
+    if sys.platform == "darwin":
+        return os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
+    return os.path.join(os.getcwd(), "data")
+
+ROOT_DIR = os.getenv("RESEARCH_ROOT_DIR", get_default_root())
 LOG_FILE = os.path.join(os.path.dirname(__file__), "reconstruction.log")
-MAP_FILE = os.path.join(os.path.dirname(ROOT_DIR), ".notebook_map.json") # Check path logic, might need fix
-# Fix MAP_FILE path to match pipeline
-MAP_FILE = "/Users/chenpeijun/Desktop/研究工作流/.notebook_map.json"
+
+# Unified Map File logic (Match auto_research_pipeline.py)
+MAP_FILE = os.path.join(ROOT_DIR, ".notebook_map.json")
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename=LOG_FILE, filemode='w')
 console = logging.StreamHandler()
@@ -19,6 +27,13 @@ console.setLevel(logging.INFO)
 logging.getLogger('').addHandler(console)
 
 def get_research_folders() -> List[str]:
+    """
+    Scans the root directory for valid research folders.
+    
+    Returns:
+        A list of absolute paths to eligible topic folders.
+    """
+
     folders = []
     # 1. Check Root subfolders
     for item in os.listdir(ROOT_DIR):
@@ -38,7 +53,14 @@ def get_research_folders() -> List[str]:
                     folders.append(p)
     return folders
 
-async def reconstruct():
+async def reconstruct() -> bool:
+    """
+    Main orchestration for the Phoenix Protocol library reconstruction.
+    
+    Returns:
+        True if the process completed without fatal errors, False otherwise.
+    """
+
     print("🔥 Starting Phoenix Protocol: Library Reconstruction...")
     folders = get_research_folders()
     print(f"📦 Found {len(folders)} local research topics to rebuild.")
@@ -154,6 +176,8 @@ async def reconstruct():
                  print(f"      Partial Output: {cloud_title}")
 
     print("\n✅ Phoenix Protocol Complete. Local Library has been mirrored to NotebookLM.")
+    return True
 
 if __name__ == "__main__":
     asyncio.run(reconstruct())
+

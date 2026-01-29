@@ -54,14 +54,20 @@ def audit_10_layers_runtime():
     """L18-L27: Sigma Runtime Scale"""
     print_audit_banner("Sigma Scale: 10-Layer Runtime Fortress")
     
-    venv_python = "/Users/chenpeijun/research_pipeline/.venv/bin/python3"
-    python_to_use = venv_python if os.path.exists(venv_python) else sys.executable
+    # Dynamic VENV detection: Look for .venv in project root or relative to script
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    local_venv = os.path.join(project_root, ".venv", "bin", "python3")
+    if os.name == 'nt': # Windows handling
+        local_venv = os.path.join(project_root, ".venv", "Scripts", "python.exe")
+        
+    python_to_use = local_venv if os.path.exists(local_venv) else sys.executable
     
     checks = []
     
     # L18: Runtime Lock
-    ok_l18 = os.path.exists(venv_python)
+    ok_l18 = os.path.exists(local_venv)
     print(f"{'✅' if ok_l18 else '❌'} L18 Runtime Lock (VENV Consistency)")
+
     checks.append(ok_l18)
     
     # L19: Resource Handshake (Gemini & Auth Connectivity)

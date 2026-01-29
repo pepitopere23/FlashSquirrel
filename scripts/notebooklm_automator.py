@@ -76,8 +76,10 @@ def save_mapping(map_file: str, topic: str, notebook_title: str) -> None:
         try:
             with open(map_file, 'r', encoding='utf-8') as f:
                 mapping = json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️ Mapping error ignored: {e}")
+
+
     mapping[topic] = notebook_title
     try:
         with open(map_file, 'w', encoding='utf-8') as f:
@@ -128,8 +130,10 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
             print(f"✨ Creating NEW notebook. (Target: {title_hint})")
             try:
                 await page.wait_for_selector(".cdk-overlay-backdrop", state="hidden", timeout=3000)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"⚠️ Overlay check failed: {e}")
+
+
 
             try:
                 await page.get_by_text("New Notebook", exact=False).first.click(timeout=3000, force=True)

@@ -3,7 +3,6 @@
 FlashSquirrel Unified Launcher 🐿️⚡️
 One command to rule them all. Handles setup, dependencies, and starts the engine.
 """
-
 import os
 import sys
 import subprocess
@@ -26,6 +25,12 @@ def run_command(cmd_list: List[str]) -> None:
     return None
 
 def check_dependencies() -> bool:
+    """
+    Verifies that all required Python libraries are installed.
+    
+    Returns:
+        True if all dependencies are present, False otherwise.
+    """
     try:
         import dotenv
         import playwright
@@ -34,10 +39,13 @@ def check_dependencies() -> bool:
     except ImportError:
         return False
 
-def main() -> None:
+def main() -> int:
     """
     The main entry point for the FlashSquirrel launcher.
     Handles environment setup and starts the research pipeline.
+    
+    Returns:
+        Exit code (0 for success, 1 for failure).
     """
     print("\n" + "🐿️ "*10)
     print("Welcome to FlashSquirrel Launcher!")
@@ -91,8 +99,9 @@ def main() -> None:
         print("\n🐿️  FlashSquirrel has returned to the forest. See you next time!")
     except Exception as e:
         print(f"❌ Pipeline crashed: {e}")
+        return 1
     
-    return None
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
