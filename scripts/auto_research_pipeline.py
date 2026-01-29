@@ -224,7 +224,7 @@ class RobustUtils:
             return True
         # 3. Output/Internal Files (Recursive Shield)
         ignore_patterns = (
-            "report_", "visualizations_", "MASTER_SYNTHESIS", 
+            "report_", "visualizations", "MASTER_SYNTHESIS", 
             "upload_package", "RESEARCH_FAILURE_", "RESEARCH_SUSPENDED_",
             "mindmap_", "slide_", ".research_lock", ".topic_id", ".DS_Store"
         )
