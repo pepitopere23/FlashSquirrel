@@ -310,7 +310,16 @@ class ResearchPipeline:
             
         logging.info(f"🔍 [Phase 1] Starting Gemini Research on: {filename}")
         
-        prompt = """
+        # ATOMIC LOCK (Phase G): Prevent concurrent research on the same topic
+        lock_path = os.path.join(parent_dir, ".research_lock")
+        if os.path.exists(lock_path):
+            logging.warning(f"🔒 Topic locked: {os.path.basename(parent_dir)} is being researched by another process.")
+            return None
+        
+        with open(lock_path, "w") as f: f.write(str(time.time()))
+        
+        try:
+            prompt = """
         [ROLE: Senior Principal Researcher]
         [OBJECTIVE: Produce a doctoral-level research report]
         [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
@@ -345,7 +354,6 @@ class ResearchPipeline:
         - Confidence Logic: (Briefly explain why this score was given)
         """
 
-        try:
             # Phase D+: Robust Sync Wait (Stability Guard)
             file_path = RobustUtils.wait_for_icloud_download(file_path)
             if not os.path.exists(file_path):
@@ -377,6 +385,7 @@ class ResearchPipeline:
             # Re-format prompt with labels
             final_prompt = prompt.format(input_context_label=input_context_label)
             
+            # Execute with Fallback (Phase E Resilience)
             response: Any = await self.generate_with_fallback(final_prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
             
             if not response or not response.text:
@@ -406,6 +415,9 @@ class ResearchPipeline:
             # Untracked exception -> Treat as Transient to be safe
             logging.error(f"Untracked Anomaly: {e}")
             raise TransientResearchError(f"Unexpected error: {str(e)}")
+        finally:
+            if 'lock_path' in locals() and os.path.exists(lock_path):
+                os.remove(lock_path)
 
     async def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
         """
@@ -516,6 +528,7 @@ class AsyncProcessor:
         """
         self.pipeline = pipeline
         self.queue = asyncio.Queue()
+        self.active_tasks: set = set() # De-duplication Shield
         self.processing = False
 
     async def worker(self) -> None:
@@ -526,10 +539,21 @@ class AsyncProcessor:
         self.processing = True
         while True:
             # Task format: (file_path, retry_count)
-            task_data = await self.queue.get()
-            file_path, retry_count = task_data if isinstance(task_data, tuple) else (task_data, 0)
+            file_path, retry_count = await self.queue.get()
             
+            # Anti-Collision: Don't process if already being handled
+            if file_path in self.active_tasks:
+                logging.debug(f"⏭️  Deduplication: {os.path.basename(file_path)} already in flight.")
+                self.queue.task_done()
+                continue
+            
+            self.active_tasks.add(file_path)
             try:
+                # Anti-Ghost: Verify file existence at worker level
+                if not os.path.exists(file_path):
+                    logging.warning(f"👻 Ghost Task: {file_path} no longer exists. Skipping.")
+                    continue
+
                 await self.process_workflow(file_path)
                 # Success: Cleanup transient markers
                 suspension_file = os.path.join(os.path.dirname(file_path), f"RESEARCH_SUSPENDED_{os.path.basename(file_path)}.md")
@@ -556,6 +580,7 @@ class AsyncProcessor:
             except Exception as e:
                 logging.error(f"❌ Worker Error: {e}")
             finally:
+                self.active_tasks.discard(file_path)
                 self.queue.task_done()
         return None
 
@@ -734,8 +759,8 @@ class InputHandler(FileSystemEventHandler):
                 return
 
         logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
-        # Give time for Shortcuts or iCloud to finish moving/downloading
-        time.sleep(1) 
+        # Settling Grace Period (Critical for OS/Cloud file stability)
+        time.sleep(2) 
         self.processor.add_task(file_path)
         return None
 
