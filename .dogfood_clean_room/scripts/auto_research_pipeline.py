@@ -644,8 +644,6 @@ class AsyncProcessor:
         self.pipeline = pipeline
         self.queue = asyncio.Queue()
         self.active_tasks: set = set() # De-duplication Shield
-        self.renaming_lock = asyncio.Lock() # Phase L+: Rename Shield
-        self.completed_folders: set = set() # Finality Registry
         self.processing = False
 
     async def worker(self) -> None:
@@ -757,27 +755,26 @@ class AsyncProcessor:
         
         await self.pipeline.generate_visualizations(content_to_push, folder_path)
         
-        # RED-TEAM FIX (Phase L+): Multi-file Rename Shield (Naming Guardian)
-        # We wrap the logic in a lock to ensure only one worker evaluates folder completion at a time.
-        async with self.renaming_lock:
-            if folder_path in self.completed_folders:
-                logging.debug(f"⏭️  Rename skipped: {folder_path} already finalized.")
-                return None
-
-            remaining_files = [
-                f for f in os.listdir(folder_path) 
-                if not RobustUtils.should_ignore(os.path.join(folder_path, f))
-                and not os.path.exists(os.path.join(folder_path, f"report_{os.path.splitext(f)[0]}.md"))
-            ]
-            
-            if remaining_files:
-                logging.info(f"⏳ Postponing rename: {len(remaining_files)} files remaining in {folder_path}")
-                return None
-            
-            # Mark as completed BEFORE renaming to prevent race conditions during the rename itself
-            self.completed_folders.add(folder_path)
-
-        # Proceed with semantic renaming (Outside the lock to keep it non-blocking, but registry protects it)
+        # RED-TEAM FIX (Phase D+): Multi-file Rename Shield
+        # Only rename if this was the last unprocessed file in the folder.
+        # This prevents breaking the path for other files waiting in the queue.
+        remaining_files = [
+            f for f in os.listdir(folder_path) 
+            if not RobustUtils.should_ignore(os.path.join(folder_path, f))
+            and not os.path.exists(os.path.join(folder_path, f"report_{os.path.splitext(f)[0]}.md"))
+        ]
+        
+        # Semantic Renaming
+        output_lines = stdout.decode().strip().split('\n')
+        new_topic = None
+        for line in reversed(output_lines):
+            if "RESULT:" in line:
+                new_topic = line.split("RESULT:")[1].strip()
+                break
+        
+        if remaining_files:
+            logging.info(f"⏳ Postponing rename: {len(remaining_files)} files remaining in {folder_path}")
+            return None
 
         # Proceed with semantic renaming
         final_topic_path = folder_path

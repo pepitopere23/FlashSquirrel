@@ -4,18 +4,12 @@ import sys
 
 # Configuration
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-try:
-    import getpass
-    CURRENT_USER = getpass.getuser()
-except:
-    CURRENT_USER = "UNKNOWN_USER"
-
 FORBIDDEN_PATTERNS = [
-    (r"/Users/(?!yourname|username)[a-zA-Z0-9]+", "⚠️ Hardcoded User Path (Potentially PII)"),
-    (rf"{CURRENT_USER}", "🚨 Specific PII Leak (Your Username Found!)"),
+    (r"/Users/[a-zA-Z0-9]+", "⚠️ Hardcoded User Path (Potentially PII)"),
     (r"shutil\.rmtree", "⚠️ Recursive Deletion (Verify Safety)"),
     (r"os\.remove", "⚠️ File Deletion (Verify Safety)"),
-    (r"GEMINI_API_KEY\s*=\s*['\"]AI", "⚠️ Exposed API Key")
+    (r"GEMINI_API_KEY\s*=\s*['\"]AI", "⚠️ Exposed API Key"),
+    (r"shutil\.rmtree", "⚠️ Recursive Deletion")
 ]
 
 IGNORE_DIRS = [".git", ".venv", "__pycache__", "processed_reports", ".agent", ".gemini"]

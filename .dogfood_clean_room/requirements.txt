@@ -1,0 +1,7 @@
+google-genai>=0.1.0
+python-dotenv
+watchdog
+playwright
+asyncio
+pathlib
+python-docx

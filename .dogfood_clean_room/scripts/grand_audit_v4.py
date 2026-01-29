@@ -133,8 +133,6 @@ def main():
     else:
         print("\n" + "!" * 40)
         print("AUDIT FAILED: NON-COMPLIANCE DETECTED")
-        print("💡 TIP: If you just downloaded FlashSquirrel, please run 'python start.py' first.")
-        print("   This will automatically set up your environment and dependencies.")
         print("!" * 40 + "\n")
         sys.exit(1)
 
