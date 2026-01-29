@@ -131,7 +131,14 @@ class RobustUtils:
             unique_suffix = uuid.uuid4().hex[:6]
             new_path = f"{new_path}_{unique_suffix}"
             logging.warning(f"⚠️ Name conflict. Renaming to: {os.path.basename(new_path)}")
-            
+        
+        try:
+            os.rename(old_path, new_path)
+            return new_path
+        except Exception as e:
+            logging.error(f"❌ Rename failed: {e}")
+            return old_path
+
     @staticmethod
     def should_ignore(file_path: str) -> bool:
         """
@@ -141,6 +148,7 @@ class RobustUtils:
         basename = os.path.basename(file_path)
         # 1. System/Py Files
         if basename.startswith('.') or file_path.endswith('.py'): return True
+        # 2. Output/Internal Files (Recursive Shield)
         ignore_patterns = (
             "report_", "visualizations_", "MASTER_SYNTHESIS", 
             "upload_package", "RESEARCH_FAILURE_", "RESEARCH_SUSPENDED_",
@@ -149,8 +157,6 @@ class RobustUtils:
         if any(p in basename for p in ignore_patterns): return True
         return False
 
-    @staticmethod
-    def safe_rename(old_path: str, new_name: str) -> str:
 
 class LinkParser:
     """Utility to extract URLs from link files (.webloc, .url)."""
