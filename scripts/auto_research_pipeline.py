@@ -39,9 +39,6 @@ class TransientResearchError(Exception):
 load_dotenv()
 
 # Cross-platform Root Directory handling
-# 1. Check if RESEARCH_ROOT_DIR is set in .env
-# 2. Fallback to Mac iCloud path if it exists
-# 3. Default to 'data' directory in the project root
 DEFAULT_MAC_ICLOUD = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
 ENV_ROOT = os.getenv("RESEARCH_ROOT_DIR")
 
@@ -407,13 +404,47 @@ class ResearchPipeline:
                 else:
                     logging.warning(f"⚠️ Fallback to file content (Link extraction failed): {filename}")
 
+            # 🛠️ Universal File Adapter (Phase L Upgrade)
+            # Smart Content Extraction for .docx, .md, .txt, .pdf
             if not content_part:
-                if mime.startswith('image') or mime == 'application/pdf':
+                # 1. Word Documents (.docx)
+                if filename.lower().endswith('.docx'):
+                    try:
+                        import docx
+                        doc = docx.Document(file_path)
+                        full_text = []
+                        for para in doc.paragraphs:
+                            full_text.append(para.text)
+                        content_part = "\n".join(full_text)
+                        logging.info(f"📄 [Adapter] Extracted text from Word doc: {filename}")
+                    except ImportError:
+                        logging.error("❌ python-docx not installed. Skipping .docx.")
+                        content_part = None
+                    except Exception as e:
+                        logging.error(f"❌ Failed to parse .docx: {e}")
+                        content_part = None
+
+                # 2. Markdown/Text (.md, .txt) - Hardened Reading
+                elif filename.lower().endswith(('.md', '.txt')):
+                    try:
+                        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                            content_part = f.read()
+                    except Exception as e:
+                        logging.error(f"❌ Failed to read text file: {e}")
+                        content_part = None
+
+                # 3. Binary/Image/PDF - Pass as Blob
+                elif mime.startswith('image') or mime == 'application/pdf':
                     with open(file_path, "rb") as f:
                         content_part = {'mime_type': mime, 'data': f.read()}
+                
+                # 4. Fallback
                 else:
-                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                        content_part = f.read()
+                    try:
+                        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                            content_part = f.read()
+                    except:
+                        logging.warning(f"⚠️ Unknown file type {mime}. Skipping content.")
 
             logging.info(f"📡 [Phase 1] Launching Gemini Research for: {filename}...")
             # Re-format prompt with labels
@@ -706,15 +737,13 @@ class AsyncProcessor:
     def add_task(self, file_path: str, retry_count: int = 0) -> None:
         """
         Safely adds a file path to the processing queue with optional retry metadata.
-        
-        Args:
-            file_path: The path to the file to be processed.
-            retry_count: How many times this task has been re-queued.
         """
         # Safe Queue Capacity (Increased for high-volume research)
         if self.queue.qsize() > 200:
             logging.warning("⚠️ Queue full! Critical overload.")
             return
+
+        self.active_tasks.add(file_path)
         self.queue.put_nowait((file_path, retry_count))
         return None
 
@@ -757,17 +786,21 @@ class InputHandler(FileSystemEventHandler):
         rel_path: str = os.path.relpath(file_path, ROOT_DIR)
         basename: str = os.path.basename(file_path)
         
-        # Safety Filter (Phase D+ Shield)
         if RobustUtils.should_ignore(file_path):
             return
         
+        # Phase G: Early Collision Shield (Pre-Settling)
+        if file_path in self.processor.active_tasks:
+            logging.debug(f"⏭️  Ignored redundant event for: {basename}")
+            return
+
         # Check extensions
         supported_exts = ('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud', '.webloc', '.url', '.html')
         if not file_path.lower().endswith(supported_exts):
             logging.warning(f"⚠️ File ignored: {basename} (Unsupported extension)")
             return
 
-        # Topic Assignment Logic
+        # Check extensions
         # If it's in a subdirectory, the subdirectory is the topic.
         # If it's in the root, it's a "General" thought (Shortcut-friendly).
         # Topic Assignment Logic

@@ -135,12 +135,12 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
                 await page.get_by_text("New Notebook", exact=False).first.click(timeout=3000, force=True)
             except Exception:
                 await page.get_by_text("建立新的筆記本", exact=False).first.click(force=True)
-            await page.wait_for_url("**/notebook/**", timeout=15000)
+            await page.wait_for_url("**/notebook/**", timeout=60000)
 
         # Upload Logic
         try:
             await asyncio.sleep(5)
-            async with page.expect_file_chooser(timeout=15000) as fc_info:
+            async with page.expect_file_chooser(timeout=60000) as fc_info:
                 upload_btn = page.get_by_text("上傳檔案", exact=False)
                 if await upload_btn.count() > 0:
                     await upload_btn.first.click(force=True)
@@ -169,9 +169,14 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
             if await title_el.count() > 0:
                 final_title = await title_el.input_value()
                 # If still "Untitled", wait a bit more
+                # Robust Title Retry Loop (Phase L Patch)
                 if "Untitled" in final_title or "未命名" in final_title:
-                    await asyncio.sleep(10)
-                    final_title = await title_el.input_value()
+                    print("🔄 Title is generic. Polling for AI update...")
+                    for _ in range(12): # Wait up to 60s
+                        await asyncio.sleep(5)
+                        final_title = await title_el.input_value()
+                        if "Untitled" not in final_title and "未命名" not in final_title and final_title.strip():
+                            break
             
             # Aesthetic Enhancement: Try to find the leading emoji
             # Usually in the notebook list or as a companion icon
@@ -194,8 +199,16 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
         except Exception as e:
             print(f"⚠️ Error during card resolution: {e}")
 
-        if map_file and mapping_key and final_title != "Untitled":
-            save_mapping(map_file, mapping_key, final_title)
+        if map_file and mapping_key:
+            # IDEMPOTENCY FIX: Enforce Map Save
+            save_title = final_title
+            if save_title == "Untitled" or save_title == "未命名":
+                # Fallback: If UI failed to capture title, use the hint/key to at least register the ID
+                # This prevents creating a duplicate next time, even if the name isn't perfect in our map.
+                save_title = title_hint if title_hint else mapping_key
+                print(f"⚠️ Title resolution weak. Fallback mapping saved as: {save_title}")
+            
+            save_mapping(map_file, mapping_key, save_title)
 
         await browser.close()
         print(f"RESULT:{final_title}") # Reliable output for shell capture
