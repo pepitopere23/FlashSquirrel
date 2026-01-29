@@ -26,6 +26,15 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
+# RED-TEAM SHIELD: Custom Exceptions for Iron Persistence
+class TerminalResearchError(Exception):
+    """Errors that cannot be recovered from (e.g. Safety Filters, Invalid Auth)."""
+    pass
+
+class TransientResearchError(Exception):
+    """Errors that can be recovered by waiting (e.g. 429, 500, Network)."""
+    pass
+
 # Configuration
 load_dotenv()
 
@@ -132,10 +141,10 @@ class RobustUtils:
         basename = os.path.basename(file_path)
         # 1. System/Py Files
         if basename.startswith('.') or file_path.endswith('.py'): return True
-        # 2. Output/Internal Files (Recursive Shield)
         ignore_patterns = (
             "report_", "visualizations_", "MASTER_SYNTHESIS", 
-            "upload_package", "RESEARCH_FAILURE_", "mindmap_", "slide_"
+            "upload_package", "RESEARCH_FAILURE_", "RESEARCH_SUSPENDED_",
+            "mindmap_", "slide_"
         )
         if any(p in basename for p in ignore_patterns): return True
         return False
@@ -268,9 +277,9 @@ class ResearchPipeline:
                     else:
                         logging.warning(f"⚠️ Model {model_name} error: {e}. Switching to next...")
                         break # Try next model
-        
-        logging.error("❌ All models failed.")
-        return None
+        logging.error("❌ All models failed after max retries.")
+        # If we got here, it's either because of persistent 429s or a real network blackout
+        raise TransientResearchError("Exhausted all models and retries. Waiting for a better window.")
 
     async def run_gemini_research(self, file_path: str) -> Optional[str]:
         """
@@ -365,11 +374,8 @@ class ResearchPipeline:
             response: Any = await self.generate_with_fallback(final_prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
             
             if not response or not response.text:
-                # FAILURE TRANSPARENCY: Log specific reason for empty response
-                error_path = os.path.join(parent_dir, f"RESEARCH_FAILURE_{os.path.splitext(filename)[0]}.md")
-                with open(error_path, "w", encoding="utf-8") as f:
-                    f.write(f"# ⚠️ Research Failure / 研究失敗\n\n**File**: `{filename}`\n**Reason**: Gemini returned an empty response after all retries. This might be due to a strict safety filter or an invalid URL.\n\n*Please check the source file or your internet connection.*")
-                return None
+                # Terminal Check: If empty, it's often a safety filter or content policy
+                raise TerminalResearchError("Gemini returned an empty response. This is likely a terminal Safety Filter hit.")
 
             report_path: str = os.path.join(parent_dir, f"report_{os.path.splitext(filename)[0]}.md")
             if os.path.exists(report_path) and os.path.getsize(report_path) > 0:
@@ -381,13 +387,19 @@ class ResearchPipeline:
             
             logging.info(f"📄 [Phase 1] Report generated: {report_path}")
             return report_path
-        except Exception as e:
-            logging.error(f"Phase 1 Gemini Error: {e}")
-            # FAILURE TRANSPARENCY: Report runtime exception
+        except TerminalResearchError as e:
+            # Terminal: Log and stop
             error_path = os.path.join(parent_dir, f"RESEARCH_FAILURE_{os.path.splitext(filename)[0]}.md")
             with open(error_path, "w", encoding="utf-8") as f:
-                f.write(f"# ⚠️ Technical Anomaly / 技術異常\n\n**File**: `{filename}`\n**Error**: `{str(e)}`")
+                f.write(f"# ⚠️ Research Terminated / 研究終止\n\n**File**: `{filename}`\n**Reason**: `{str(e)}` (Terminal Policy/Auth Error)\n\n*Manual intervention required.*")
             return None
+        except TransientResearchError as e:
+            # Re-raise to let AsyncProcessor handle re-queuing
+            raise e
+        except Exception as e:
+            # Untracked exception -> Treat as Transient to be safe
+            logging.error(f"Untracked Anomaly: {e}")
+            raise TransientResearchError(f"Unexpected error: {str(e)}")
 
     async def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
         """
@@ -507,9 +519,34 @@ class AsyncProcessor:
         logging.info("👷 Async Worker started...")
         self.processing = True
         while True:
-            file_path: str = await self.queue.get()
+            # Task format: (file_path, retry_count)
+            task_data = await self.queue.get()
+            file_path, retry_count = task_data if isinstance(task_data, tuple) else (task_data, 0)
+            
             try:
                 await self.process_workflow(file_path)
+                # Success: Cleanup transient markers
+                suspension_file = os.path.join(os.path.dirname(file_path), f"RESEARCH_SUSPENDED_{os.path.basename(file_path)}.md")
+                if os.path.exists(suspension_file): os.remove(suspension_file)
+            except TransientResearchError as e:
+                # ANTI-STRIKE: Exponential Backoff Re-queuing
+                if retry_count < 10: # Allow up to 10 persistent retries (Iron Persistence)
+                    backoff = min(30 * (2 ** retry_count), 1800) # Max 30 mins
+                    logging.warning(f"🛡️ Anti-Strike: Task '{os.path.basename(file_path)}' suspended. Retrying in {backoff}s... (Reason: {e})")
+                    
+                    # Status Signal: RESEARCH_SUSPENDED.md
+                    suspension_file = os.path.join(os.path.dirname(file_path), f"RESEARCH_SUSPENDED_{os.path.basename(file_path)}.md")
+                    with open(suspension_file, "w", encoding="utf-8") as f:
+                        f.write(f"# ⏳ Research Suspended / 研究暫停\n\n**Status**: Waiting for API/Network recovery.\n**Next Attempt**: ~{backoff}s\n**Attempts**: {retry_count + 1}/10\n\n*The squirrel is not striking; it is waiting for a better window.*")
+                    
+                    # Sleep and Re-queue
+                    await asyncio.sleep(backoff)
+                    self.add_task(file_path, retry_count + 1)
+                else:
+                    logging.error(f"❌ Persistence Exhausted for {file_path}. Declaring total failure.")
+                    failure_path = os.path.join(os.path.dirname(file_path), f"RESEARCH_FAILURE_{os.path.basename(file_path)}.md")
+                    with open(failure_path, "w", encoding="utf-8") as f:
+                        f.write(f"# 🚨 Persistence Exhausted / 全面失敗\n\n**File**: `{os.path.basename(file_path)}`\n**Reason**: Too many transient failures. Check internet/quota.")
             except Exception as e:
                 logging.error(f"❌ Worker Error: {e}")
             finally:
@@ -585,18 +622,19 @@ class AsyncProcessor:
                 logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {new_folder_path}")
         return None
         
-    def add_task(self, file_path: str) -> None:
+    def add_task(self, file_path: str, retry_count: int = 0) -> None:
         """
-        Safely adds a file path to the processing queue.
+        Safely adds a file path to the processing queue with optional retry metadata.
         
         Args:
             file_path: The path to the file to be processed.
+            retry_count: How many times this task has been re-queued.
         """
         # Safe Queue Capacity (Increased for high-volume research)
         if self.queue.qsize() > 200:
             logging.warning("⚠️ Queue full! Critical overload.")
             return
-        self.queue.put_nowait(file_path)
+        self.queue.put_nowait((file_path, retry_count))
         return None
 
 
