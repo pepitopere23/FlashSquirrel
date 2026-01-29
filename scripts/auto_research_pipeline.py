@@ -123,22 +123,21 @@ class LinkParser:
     
     @staticmethod
     def extract_url(file_path: str) -> Optional[str]:
-        """Extracts the first valid URL found in the file."""
+        """Extracts the first valid URL found in the file with hardened regex."""
         ext = os.path.splitext(file_path)[1].lower()
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             
+            import re
             if ext == ".webloc":
-                # Basic XML search to avoid heavy plistlib for a single string
-                import re
-                match = re.search(r"<string>(https?://[^<]+)</string>", content)
-                return match.group(1) if match else None
+                # Hardened XML search: handles whitespace, single/double quotes, and multiline
+                match = re.search(r"<string>\s*(https?://[^\s<]+)\s*</string>", content, re.IGNORECASE)
+                return match.group(1).strip() if match else None
             elif ext == ".url":
-                # INI style search
-                import re
-                match = re.search(r"URL=(https?://[^\s\a\b]+)", content)
-                return match.group(1) if match else None
+                # Hardened INI search: handles spaces around = and CRLF
+                match = re.search(r"URL\s*=\s*(https?://[^\s\r\n\a\b]+)", content, re.IGNORECASE)
+                return match.group(1).strip() if match else None
         except Exception as e:
             logging.error(f"🔗 Link extraction failed: {e}")
         return None
@@ -339,6 +338,10 @@ class ResearchPipeline:
             response: Any = await self.generate_with_fallback(final_prompt, content_part, tools=[types.Tool(google_search=types.GoogleSearch())])
             
             if not response or not response.text:
+                # FAILURE TRANSPARENCY: Log specific reason for empty response
+                error_path = os.path.join(parent_dir, f"RESEARCH_FAILURE_{os.path.splitext(filename)[0]}.md")
+                with open(error_path, "w", encoding="utf-8") as f:
+                    f.write(f"# ⚠️ Research Failure / 研究失敗\n\n**File**: `{filename}`\n**Reason**: Gemini returned an empty response after all retries. This might be due to a strict safety filter or an invalid URL.\n\n*Please check the source file or your internet connection.*")
                 return None
 
             report_path: str = os.path.join(parent_dir, f"report_{os.path.splitext(filename)[0]}.md")
@@ -353,6 +356,10 @@ class ResearchPipeline:
             return report_path
         except Exception as e:
             logging.error(f"Phase 1 Gemini Error: {e}")
+            # FAILURE TRANSPARENCY: Report runtime exception
+            error_path = os.path.join(parent_dir, f"RESEARCH_FAILURE_{os.path.splitext(filename)[0]}.md")
+            with open(error_path, "w", encoding="utf-8") as f:
+                f.write(f"# ⚠️ Technical Anomaly / 技術異常\n\n**File**: `{filename}`\n**Error**: `{str(e)}`")
             return None
 
     async def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
