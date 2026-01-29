@@ -6,15 +6,15 @@
     <string>com.flashsquirrel.agent</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/chenpeijun/research_pipeline/.venv/bin/python3</string>
-        <string>/Users/chenpeijun/Desktop/研究工作流/scripts/auto_research_pipeline.py</string>
+        <string>{{VENV_PYTHON}}</string>
+        <string>{{PROJECT_ROOT}}/scripts/auto_research_pipeline.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/chenpeijun/Desktop/研究工作流</string>
+    <string>{{PROJECT_ROOT}}</string>
     <key>StandardOutPath</key>
-    <string>/Users/chenpeijun/Desktop/研究工作流/pipeline_bg.log</string>
+    <string>{{PROJECT_ROOT}}/pipeline_bg.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/chenpeijun/Desktop/研究工作流/pipeline_error.log</string>
+    <string>{{PROJECT_ROOT}}/pipeline_error.log</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>

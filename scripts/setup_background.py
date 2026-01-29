@@ -12,9 +12,13 @@ from pathlib import Path
 
 def setup_mac():
     print("🍎 Setting up macOS LaunchAgent...")
-    plist_template = Path("scripts/com.user.research_pipeline.plist")
+    plist_template = Path("scripts/com.user.research_pipeline.plist.template")
     if not plist_template.exists():
-        print("❌ Error: scripts/com.user.research_pipeline.plist not found.")
+        # Fallback to non-template for legacy support during migration
+        plist_template = Path("scripts/com.user.research_pipeline.plist")
+        
+    if not plist_template.exists():
+        print("❌ Error: Background service template not found.")
         return
 
     dest_path = Path.home() / "Library/LaunchAgents/com.flashsquirrel.agent.plist"
@@ -23,15 +27,18 @@ def setup_mac():
     with open(plist_template, "r") as f:
         content = f.read()
     
-    # Get current paths
+    # Get current paths (Dynamic Injection)
     project_root = os.getcwd()
     python_path = sys.executable
-    username = os.getlogin()
     
-    # Precise replacement to avoid double paths
-    content = content.replace("/Users/YOUR_USERNAME/YOUR_PATH_TO_FLASHSQUIRREL/.venv/bin/python3", python_path)
-    content = content.replace("/Users/YOUR_USERNAME/YOUR_PATH_TO_FLASHSQUIRREL", project_root)
-    content = content.replace("YOUR_USERNAME", username)
+    # Precise replacement using tokens
+    content = content.replace("{{PROJECT_ROOT}}", project_root)
+    content = content.replace("{{VENV_PYTHON}}", python_path)
+    
+    # Legacy Fallback (for existing installs matching the creator's path)
+    if "/Users/chenpeijun" in content:
+        content = content.replace("/Users/chenpeijun/research_pipeline/.venv/bin/python3", python_path)
+        content = content.replace("/Users/chenpeijun/Desktop/研究工作流", project_root)
 
     with open(dest_path, "w") as f:
         f.write(content)

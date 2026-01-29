@@ -4,9 +4,8 @@ import sys
 
 # Configuration
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-USER_NAME = "chenpeijun"
 FORBIDDEN_PATTERNS = [
-    (r"/Users/chenpeijun", "⚠️ Hardcoded User Path"),
+    (r"/Users/[a-zA-Z0-9]+", "⚠️ Hardcoded User Path (Potentially PII)"),
     (r"shutil\.rmtree", "⚠️ Recursive Deletion (Verify Safety)"),
     (r"os\.remove", "⚠️ File Deletion (Verify Safety)"),
     (r"GEMINI_API_KEY\s*=\s*['\"]AI", "⚠️ Exposed API Key"),

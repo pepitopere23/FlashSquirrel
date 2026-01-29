@@ -7,8 +7,13 @@ import os
 import shutil
 import logging
 
-ROOT_DIR = "/Users/chenpeijun/Desktop/研究工作流"
-ICLOUD_PATH = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
+# Dynamic Path Detection for Industrial Purity
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = PROJECT_ROOT
+
+# Cross-platform iCloud discovery
+HOME = os.path.expanduser("~")
+ICLOUD_PATH = os.path.join(HOME, "Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')

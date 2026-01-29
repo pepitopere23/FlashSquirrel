@@ -6,8 +6,13 @@ from playwright.async_api import async_playwright
 
 # Configuration
 LOG_FILE = "adoption.log"
-MAP_FILE = "/Users/chenpeijun/Desktop/研究工作流/.notebook_map.json"
-ROOT_DIR = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
+# Dynamic Path Detection for Industrial Purity
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MAP_FILE = os.path.join(PROJECT_ROOT, ".notebook_map.json")
+
+# Cross-platform iCloud discovery
+HOME = os.path.expanduser("~")
+ROOT_DIR = os.path.join(HOME, "Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
 RECOVERY_DIR = os.path.join(ROOT_DIR, "Legacy_Recovery_Bin")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename=LOG_FILE, filemode='w')
