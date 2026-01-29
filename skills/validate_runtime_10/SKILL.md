@@ -1,8 +1,8 @@
 ---
 name: validate_runtime_10
 description: >
-  FlashSquirrel 10-Layer Runtime Validation System (Sigma Scale). 
-  Ensures environment consistency, logic resilience, and goal fulfillment.
+  FlashSquirrel 10-Layer Dynamic Validation System (Sigma Scale). 
+  Ensures environment consistency, dynamic stability, and goal fulfillment.
   Triggers: "runtime check", "sigma", "10層驗證", "stability audit"
 allowed-tools:
   - Read
@@ -13,9 +13,9 @@ user-invocable: true
 context: fork
 ---
 
-# FlashSquirrel 10-Layer Runtime Validation Skill (Sigma)
+# FlashSquirrel 10-Layer Dynamic Validation Skill (Sigma / 動態)
 
-專業級系統穩定性驗證系統。專注於「Sigma 運行量表」(L18-L27) 的自動化檢測。
+專業級系統穩定性驗證系統。專注於「Sigma 動態量表」(L18-L27) 的自動化檢測。
 
 ## Usage
 
