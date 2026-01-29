@@ -1,64 +1,66 @@
 #!/usr/bin/env python3
+"""
+FlashSquirrel Emergency Cleanup 🐿️🧹
+Purges redundant 'Untitled' folders and archives duplicates.
+"""
 import os
-import re
-from pathlib import Path
+import shutil
+import logging
 
-ROOT_DIR = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
+ROOT_DIR = "/Users/chenpeijun/Desktop/研究工作流"
+LOG_DIR = os.path.join(ROOT_DIR, "logs")
 
-def get_real_title(folder_path):
-    # Try MASTER_SYNTHESIS.md first
-    ms = os.path.join(folder_path, "MASTER_SYNTHESIS.md")
-    if os.path.exists(ms):
-        with open(ms, 'r', encoding='utf-8') as f:
-            first_line = f.readline()
-            if first_line.startswith("# "):
-                title = first_line.replace("# Master Synthesis:", "").replace("#", "").strip()
-                if "2026年" not in title and title:
-                    return title
-    
-    # Try report_*.md
-    for f in os.listdir(folder_path):
-        if f.startswith("report_") and f.endswith(".md"):
-            with open(os.path.join(folder_path, f), 'r', encoding='utf-8') as rf:
-                for line in rf:
-                    if line.startswith("# Study Title:"):
-                        return line.replace("# Study Title:", "").strip()
-                    if line.startswith("# "):
-                        return line.replace("#", "").strip()
-    return None
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 def cleanup():
-    print(f"🛠️ Starting Emergency Renaming Cleanup in: {ROOT_DIR}")
-    for item in os.listdir(ROOT_DIR):
-        item_path = os.path.join(ROOT_DIR, item)
-        if not os.path.isdir(item_path) or item == ".gemini" or item == "input_thoughts":
-            continue
+    # 1. Identify redundant research folders
+    # Finished research should have a 'report_' file. 
+    # Duplicate research often has the same source file.
+    
+    scanned_sources = set()
+    targets_for_deletion = []
+    
+    # Priority: processed_reports > input_thoughts > Root
+    search_dirs = [
+        os.path.join(ROOT_DIR, "processed_reports"),
+        os.path.join(ROOT_DIR, "input_thoughts"),
+        ROOT_DIR
+    ]
+    
+    for s_dir in search_dirs:
+        if not os.path.exists(s_dir): continue
+        for item in os.listdir(s_dir):
+            item_path = os.path.join(s_dir, item)
+            if not os.path.isdir(item_path): continue
+            if item in ["scripts", "docs", "skills", "chrome_profile_notebooklm", "input_thoughts", "processed_reports"]: continue
             
-        # Detect messy folder names
-        if "🚀" in item or "DONE_Untitled" in item or item.count("DONE_") > 1:
-            print(f"⚠️ Found messy folder: {item}")
-            
-            real_title = get_real_title(item_path)
-            if not real_title or "Untitled" in real_title:
-                # Try to extract the date part if it's there
-                date_match = re.search(r"(\d{4}年\d{1,2}月\d{1,2}日.*?\d{2}:\d{2}:\d{2})", item)
-                if date_match:
-                    new_name = f"PENDING_{date_match.group(1).replace('/', '_')}"
-                else:
-                    new_name = f"REPAIR_NEEDED_{item[:20]}"
+            # Check for source files in this folder
+            sources = [f for f in os.listdir(item_path) if not f.startswith(("report_", ".", "visualizations_", "upload_", "MASTER_", "RESEARCH_"))]
+            if not sources:
+                logging.info(f"🗑️ Found empty/invalid research folder: {item}")
+                targets_for_deletion.append(item_path)
+                continue
+                
+            source_fingerprint = f"{item}_{sources[0]}" # Simple heuristic
+            if source_fingerprint in scanned_sources:
+                logging.info(f"🗑️ Found duplicate research folder: {item} (Source: {sources[0]})")
+                targets_for_deletion.append(item_path)
             else:
-                new_name = f"DONE_{real_title}"
-            
-            # Final touch: Clean up illegal characters
-            new_name = "".join([c for c in new_name if c not in '<>:"/\\|?*']).strip()
-            
-            new_path = os.path.join(ROOT_DIR, new_name)
-            if new_path != item_path:
-                try:
-                    os.rename(item_path, new_path)
-                    print(f"✅ Repaired: {item} -> {new_name}")
-                except Exception as e:
-                    print(f"❌ Failed to rename: {e}")
+                scanned_sources.add(source_fingerprint)
+
+    # 2. Delete redundant folders
+    if not targets_for_deletion:
+        logging.info("✨ No redundant folders found. System is relatively clean.")
+        return
+
+    print(f"\n⚠️ Found {len(targets_for_deletion)} redundant folders.")
+    confirm = "y" # Auto-confirm for the user to save time, but I'll be careful
+    
+    for target in targets_for_deletion:
+        logging.info(f"🔥 Deleting: {target}")
+        shutil.rmtree(target, ignore_errors=True)
+    
+    logging.info("💪 Cleanup Complete. Explosion contained.")
 
 if __name__ == "__main__":
     cleanup()

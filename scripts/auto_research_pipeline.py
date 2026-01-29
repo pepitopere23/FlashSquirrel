@@ -148,13 +148,21 @@ class RobustUtils:
         basename = os.path.basename(file_path)
         # 1. System/Py Files
         if basename.startswith('.') or file_path.endswith('.py'): return True
-        # 2. Output/Internal Files (Recursive Shield)
+        # 2. Administrative Folders (The Dead-End Shield Phase H)
+        root_parts = os.path.relpath(file_path, ROOT_DIR).split(os.sep)
+        if "processed_reports" in root_parts or "docs" in root_parts or "scripts" in root_parts: 
+            return True
+        # 3. Output/Internal Files (Recursive Shield)
         ignore_patterns = (
             "report_", "visualizations_", "MASTER_SYNTHESIS", 
             "upload_package", "RESEARCH_FAILURE_", "RESEARCH_SUSPENDED_",
-            "mindmap_", "slide_"
+            "mindmap_", "slide_", ".research_lock"
         )
         if any(p in basename for p in ignore_patterns): return True
+        # 4. Success Marker Check (Avoid re-processing finished files)
+        report_name = f"report_{os.path.splitext(basename)[0]}.md"
+        if os.path.exists(os.path.join(os.path.dirname(file_path), report_name)):
+            return True
         return False
 
 
@@ -645,12 +653,27 @@ class AsyncProcessor:
             return None
 
         # Proceed with semantic renaming
+        final_topic_path = folder_path
         if new_topic and new_topic != "Untitled" and "Success" not in new_topic and "Error" not in new_topic:
             # AESTHETIC UPDATE: Using raw semantic title (no DONE_ prefix)
             final_name = new_topic
-            new_folder_path = RobustUtils.safe_rename(folder_path, final_name)
-            if new_folder_path != folder_path:
-                logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {new_folder_path}")
+            final_topic_path = RobustUtils.safe_rename(folder_path, final_name)
+            if final_topic_path != folder_path:
+                logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {final_topic_path}")
+        
+        # ARCHIVAL: Move to processed_reports (Phase H Final Shield)
+        try:
+            processed_dir = os.path.join(self.pipeline.root_dir, "processed_reports")
+            os.makedirs(processed_dir, exist_ok=True)
+            archived_path = os.path.join(processed_dir, os.path.basename(final_topic_path))
+            # Safely handle if destination already exists
+            if os.path.exists(archived_path):
+                archived_path += f"_{uuid.uuid4().hex[:4]}"
+            shutil.move(final_topic_path, archived_path)
+            logging.info(f"📦 Archived Completion: {os.path.basename(archived_path)} moved to processed_reports.")
+        except Exception as e:
+            logging.error(f"Failed to archive completed research: {e}")
+            
         return None
         
     def add_task(self, file_path: str, retry_count: int = 0) -> None:
