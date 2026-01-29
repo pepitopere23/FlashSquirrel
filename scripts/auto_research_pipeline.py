@@ -561,16 +561,28 @@ class AsyncProcessor:
                 new_topic = line.replace("RESULT:", "").strip()
                 break
         
+        await self.pipeline.generate_visualizations(content_to_push, folder_path)
+        
+        # RED-TEAM FIX (Phase D+): Multi-file Rename Shield
+        # Only rename if this was the last unprocessed file in the folder.
+        # This prevents breaking the path for other files waiting in the queue.
+        remaining_files = [
+            f for f in os.listdir(folder_path) 
+            if not RobustUtils.should_ignore(os.path.join(folder_path, f))
+            and not os.path.exists(os.path.join(folder_path, f"report_{os.path.splitext(f)[0]}.md"))
+        ]
+        
+        if remaining_files:
+            logging.info(f"⏳ Postponing rename: {len(remaining_files)} files remaining in {folder_path}")
+            return None
+
+        # Proceed with semantic renaming
         if new_topic and new_topic != "Untitled" and "Success" not in new_topic and "Error" not in new_topic:
             # AESTHETIC UPDATE: Using raw semantic title (no DONE_ prefix)
             final_name = new_topic
-            
             new_folder_path = RobustUtils.safe_rename(folder_path, final_name)
             if new_folder_path != folder_path:
                 logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {new_folder_path}")
-                folder_path = new_folder_path
-
-        await self.pipeline.generate_visualizations(content_to_push, folder_path)
         return None
         
     def add_task(self, file_path: str) -> None:
@@ -580,9 +592,9 @@ class AsyncProcessor:
         Args:
             file_path: The path to the file to be processed.
         """
-        # Check queue size to prevent overflow
-        if self.queue.qsize() > 50:
-            logging.warning("⚠️ Queue full! Dropping task.")
+        # Safe Queue Capacity (Increased for high-volume research)
+        if self.queue.qsize() > 200:
+            logging.warning("⚠️ Queue full! Critical overload.")
             return
         self.queue.put_nowait(file_path)
         return None
