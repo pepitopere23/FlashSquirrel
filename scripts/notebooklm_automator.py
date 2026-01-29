@@ -86,17 +86,9 @@ def save_mapping(map_file: str, topic: str, notebook_title: str) -> None:
         print(f"⚠️ Failed to save mapping: {e}")
     return None
 
-async def create_and_upload(file_path: str, title_hint: Optional[str] = None, map_file: Optional[str] = None) -> str:
+async def create_and_upload(file_path: str, title_hint: Optional[str] = None, map_file: Optional[str] = None, topic_id: Optional[str] = None) -> str:
     """
     Orchestrates the Playwright automation to create/find a notebook and upload files.
-    
-    Args:
-        file_path: Path to the file to upload.
-        title_hint: Suggested title or original folder name.
-        map_file: Path to the metadata mapping file.
-        
-    Returns:
-        The final confirmed title of the notebook.
     """
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -108,7 +100,9 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
         await page.goto("https://notebooklm.google.com/")
         
         topic_found = False
-        mapped_title = get_mapping(map_file, title_hint) if map_file and title_hint else None
+        # Phase I: Stable ID Mapping
+        mapping_key = topic_id if topic_id else title_hint
+        mapped_title = get_mapping(map_file, mapping_key) if map_file and mapping_key else None
         
         search_targets = []
         if mapped_title: search_targets.append(mapped_title)
@@ -200,8 +194,8 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
         except Exception as e:
             print(f"⚠️ Error during card resolution: {e}")
 
-        if map_file and title_hint and final_title != "Untitled":
-            save_mapping(map_file, title_hint, final_title)
+        if map_file and mapping_key and final_title != "Untitled":
+            save_mapping(map_file, mapping_key, final_title)
 
         await browser.close()
         print(f"RESULT:{final_title}") # Reliable output for shell capture
@@ -212,4 +206,5 @@ if __name__ == "__main__":
     target_file = sys.argv[1]
     title_arg = sys.argv[2] if len(sys.argv) > 2 else None
     mapping_file = sys.argv[3] if len(sys.argv) > 3 else None
-    asyncio.run(create_and_upload(target_file, title_arg, mapping_file))
+    topic_id_arg = sys.argv[4] if len(sys.argv) > 4 else None
+    asyncio.run(create_and_upload(target_file, title_arg, mapping_file, topic_id_arg))

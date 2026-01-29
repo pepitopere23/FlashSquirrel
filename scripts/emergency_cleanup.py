@@ -8,6 +8,7 @@ import shutil
 import logging
 
 ROOT_DIR = "/Users/chenpeijun/Desktop/研究工作流"
+ICLOUD_PATH = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -24,7 +25,9 @@ def cleanup():
     search_dirs = [
         os.path.join(ROOT_DIR, "processed_reports"),
         os.path.join(ROOT_DIR, "input_thoughts"),
-        ROOT_DIR
+        ROOT_DIR,
+        os.path.join(ICLOUD_PATH, "input_thoughts"),
+        ICLOUD_PATH
     ]
     
     for s_dir in search_dirs:
@@ -36,6 +39,13 @@ def cleanup():
             
             # Check for source files in this folder
             sources = [f for f in os.listdir(item_path) if not f.startswith(("report_", ".", "visualizations_", "upload_", "MASTER_", "RESEARCH_"))]
+            
+            # AGGRESSIVE PURGE (Phase I): Any folder containing 'Untitled' or '未命名' that is redundant
+            if "Untitled notebook" in item or "未命名筆記本" in item or "Untitled_Research" in item:
+                logging.info(f"🗑️ Found explosion debris folder: {item}")
+                targets_for_deletion.append(item_path)
+                continue
+
             if not sources:
                 logging.info(f"🗑️ Found empty/invalid research folder: {item}")
                 targets_for_deletion.append(item_path)

@@ -125,10 +125,12 @@ class RobustUtils:
             The actual resulting folder path.
         """
         parent = os.path.dirname(old_path)
+        # Force new_name to be a single-level name (no slashes)
+        new_name = os.path.basename(new_name)
         new_path = os.path.join(parent, new_name)
         
         if os.path.exists(new_path) and new_path != old_path:
-            unique_suffix = uuid.uuid4().hex[:6]
+            unique_suffix = uuid.uuid4().hex[:4]
             new_path = f"{new_path}_{unique_suffix}"
             logging.warning(f"⚠️ Name conflict. Renaming to: {os.path.basename(new_path)}")
         
@@ -140,6 +142,27 @@ class RobustUtils:
             return old_path
 
     @staticmethod
+    def get_topic_id(folder_path: str) -> str:
+        """
+        Retrieves or generates a stable identity for a research topic folder.
+        """
+        id_file = os.path.join(folder_path, ".topic_id")
+        if os.path.exists(id_file):
+            try:
+                with open(id_file, "r") as f:
+                    return f.read().strip()
+            except:
+                pass
+        
+        new_id = uuid.uuid4().hex[:8]
+        try:
+            with open(id_file, "w") as f:
+                f.write(new_id)
+        except Exception as e:
+            logging.error(f"Failed to write topic ID: {e}")
+        return new_id
+
+    @staticmethod
     def should_ignore(file_path: str) -> bool:
         """
         Final authority on whether a file should be ignored by the research engine.
@@ -148,20 +171,23 @@ class RobustUtils:
         basename = os.path.basename(file_path)
         # 1. System/Py Files
         if basename.startswith('.') or file_path.endswith('.py'): return True
-        # 2. Administrative Folders (The Dead-End Shield Phase H)
+        # 2. Administrative Folders (Administrative Shield)
         root_parts = os.path.relpath(file_path, ROOT_DIR).split(os.sep)
-        if "processed_reports" in root_parts or "docs" in root_parts or "scripts" in root_parts: 
+        # Never process anything in these folders
+        if any(p in ["processed_reports", "docs", "scripts", "skills", "chrome_profile_notebooklm"] for p in root_parts): 
             return True
         # 3. Output/Internal Files (Recursive Shield)
         ignore_patterns = (
             "report_", "visualizations_", "MASTER_SYNTHESIS", 
             "upload_package", "RESEARCH_FAILURE_", "RESEARCH_SUSPENDED_",
-            "mindmap_", "slide_", ".research_lock"
+            "mindmap_", "slide_", ".research_lock", ".topic_id", ".DS_Store"
         )
         if any(p in basename for p in ignore_patterns): return True
         # 4. Success Marker Check (Avoid re-processing finished files)
+        # Only skip if the report exists AND is stable.
         report_name = f"report_{os.path.splitext(basename)[0]}.md"
-        if os.path.exists(os.path.join(os.path.dirname(file_path), report_name)):
+        report_path = os.path.join(os.path.dirname(file_path), report_name)
+        if os.path.exists(report_path) and os.path.getsize(report_path) > 0:
             return True
         return False
 
@@ -619,12 +645,13 @@ class AsyncProcessor:
         with open(upload_package_path, "w", encoding="utf-8") as f: f.write(content_to_push)
         
         topic: str = os.path.basename(folder_path)
-        logging.info(f"🤖 Automating NotebookLM for: {topic}")
+        topic_id: str = RobustUtils.get_topic_id(folder_path)
+        logging.info(f"🤖 Automating NotebookLM: {topic} (ID: {topic_id})")
         automator_script = os.path.join(os.path.dirname(__file__), "notebooklm_automator.py")
         
         map_file = os.path.join(self.pipeline.root_dir, ".notebook_map.json")
         proc = await asyncio.create_subprocess_exec(
-            sys.executable, automator_script, upload_package_path, topic, map_file,
+            sys.executable, automator_script, upload_package_path, topic, map_file, topic_id,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await proc.communicate()
@@ -648,6 +675,14 @@ class AsyncProcessor:
             and not os.path.exists(os.path.join(folder_path, f"report_{os.path.splitext(f)[0]}.md"))
         ]
         
+        # Semantic Renaming
+        output_lines = stdout.decode().strip().split('\n')
+        new_topic = None
+        for line in reversed(output_lines):
+            if "RESULT:" in line:
+                new_topic = line.split("RESULT:")[1].strip()
+                break
+        
         if remaining_files:
             logging.info(f"⏳ Postponing rename: {len(remaining_files)} files remaining in {folder_path}")
             return None
@@ -655,25 +690,17 @@ class AsyncProcessor:
         # Proceed with semantic renaming
         final_topic_path = folder_path
         if new_topic and new_topic != "Untitled" and "Success" not in new_topic and "Error" not in new_topic:
-            # AESTHETIC UPDATE: Using raw semantic title (no DONE_ prefix)
-            final_name = new_topic
-            final_topic_path = RobustUtils.safe_rename(folder_path, final_name)
-            if final_topic_path != folder_path:
-                logging.info(f"🏷️ Aesthetic Renamed: {folder_path} -> {final_topic_path}")
-        
-        # ARCHIVAL: Move to processed_reports (Phase H Final Shield)
-        try:
-            processed_dir = os.path.join(self.pipeline.root_dir, "processed_reports")
-            os.makedirs(processed_dir, exist_ok=True)
-            archived_path = os.path.join(processed_dir, os.path.basename(final_topic_path))
-            # Safely handle if destination already exists
-            if os.path.exists(archived_path):
-                archived_path += f"_{uuid.uuid4().hex[:4]}"
-            shutil.move(final_topic_path, archived_path)
-            logging.info(f"📦 Archived Completion: {os.path.basename(archived_path)} moved to processed_reports.")
-        except Exception as e:
-            logging.error(f"Failed to archive completed research: {e}")
+            # Phase I: Strict Sanitization to prevent '套娃' (Recursive Nesting)
+            # Remove any path separators or illegal characters
+            sanitized_topic = "".join([c for c in new_topic if c.isalnum() or c in (" ", "_", "-", "(", ")", "：", ":", "[", "]")])
+            sanitized_topic = sanitized_topic.replace("/", "_").replace("\\", "_").strip()
             
+            final_topic_path = RobustUtils.safe_rename(folder_path, sanitized_topic)
+            if final_topic_path != folder_path:
+                logging.info(f"🏷️ Semantic Unified: {folder_path} -> {final_topic_path}")
+        
+        # Phase I: Final Feedback Loop Restoration
+        # No more 'processed_reports' move. Keep topics alive in 'input_thoughts'.
         return None
         
     def add_task(self, file_path: str, retry_count: int = 0) -> None:
