@@ -123,12 +123,25 @@ class RobustUtils:
             new_path = f"{new_path}_{unique_suffix}"
             logging.warning(f"⚠️ Name conflict. Renaming to: {os.path.basename(new_path)}")
             
-        try:
-            os.rename(old_path, new_path)
-            return new_path
-        except Exception as e:
-            logging.error(f"❌ Rename Failed: {e}")
-            return old_path
+    @staticmethod
+    def should_ignore(file_path: str) -> bool:
+        """
+        Final authority on whether a file should be ignored by the research engine.
+        Prevents recursive loops and system file pollution.
+        """
+        basename = os.path.basename(file_path)
+        # 1. System/Py Files
+        if basename.startswith('.') or file_path.endswith('.py'): return True
+        # 2. Output/Internal Files (Recursive Shield)
+        ignore_patterns = (
+            "report_", "visualizations_", "MASTER_SYNTHESIS", 
+            "upload_package", "RESEARCH_FAILURE_", "mindmap_", "slide_"
+        )
+        if any(p in basename for p in ignore_patterns): return True
+        return False
+
+    @staticmethod
+    def safe_rename(old_path: str, new_name: str) -> str:
 
 class LinkParser:
     """Utility to extract URLs from link files (.webloc, .url)."""
@@ -613,12 +626,8 @@ class InputHandler(FileSystemEventHandler):
         rel_path: str = os.path.relpath(file_path, ROOT_DIR)
         basename: str = os.path.basename(file_path)
         
-        # Skip internal system files
-        if file_path.endswith(".py"): 
-            return
-        if basename.startswith('.'): 
-            return
-        if "report_" in basename or "visualizations_" in basename or "MASTER_SYNTHESIS" in basename: 
+        # Safety Filter (Phase D+ Shield)
+        if RobustUtils.should_ignore(file_path):
             return
         
         # Check extensions
@@ -685,18 +694,16 @@ async def scan_existing_files(processor: AsyncProcessor) -> None:
     for root, dirs, files in os.walk(ROOT_DIR):
         for file in files:
             file_path: str = os.path.join(root, file)
-            # Skip hidden files unless they are iCloud placeholders
-            if os.path.basename(file_path).startswith('.') and not file_path.endswith('.icloud'): 
+            # Unified Ignore Logic (Recursive Shield)
+            if RobustUtils.should_ignore(file_path):
                 continue
             
-            supported_exts = ('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud', '.webloc', '.url', '.html')
-            if not file_path.lower().endswith(supported_exts): 
-                continue
-            if "report_" in file or "visualizations_" in file or "MASTER_SYNTHESIS" in file or "upload_package" in file_path: 
-                continue
+            # Skip if already processed (Report OR Failure exists)
+            stem = os.path.splitext(file)[0]
+            report_name = f"report_{stem}.md"
+            failure_name = f"RESEARCH_FAILURE_{stem}.md"
             
-            report_name: str = f"report_{os.path.splitext(file)[0]}.md"
-            if os.path.exists(os.path.join(root, report_name)):
+            if os.path.exists(os.path.join(root, report_name)) or os.path.exists(os.path.join(root, failure_name)):
                 continue
 
             logging.info(f"📂 Found unprocessed historical file: {file}")
