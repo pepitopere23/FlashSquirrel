@@ -31,3 +31,10 @@ data/
 .AppleDouble
 .LSOverride
 chrome_profile_notebooklm/
+_QUARANTINE_/
+*.log
+pipeline_bg_v3.log
+stats_*.json
+implementation_plan.md
+tracking_report.md
+report_pipeline_audit.md

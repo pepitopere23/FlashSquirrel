@@ -129,10 +129,13 @@ class StateTracker:
             try:
                 with open(self.state_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.2"}
+                    # V3 Upgrade: Ensure fault_history exists
+                    if "fault_history" not in data:
+                        data["fault_history"] = {}
+                    return data
             except Exception as e:
                 logging.error(f"⚠️ State load failed: {e}")
-        return {"processed": {}, "version": "1.1.2"}
+        return {"processed": {}, "fault_history": {}, "version": "1.2.0-Ironclad"}
 
     def _sync_hashes(self) -> None:
         processed = self.state.get("processed", {})
@@ -141,9 +144,27 @@ class StateTracker:
             if h: self.processed_hashes.add(h)
 
     def is_processed(self, file_path: str, file_hash: Optional[str] = None) -> bool:
-        """Check if a file hash has already been finished."""
+        """
+        Check if a file hash has already been finished AND the output exists.
+        V3 Upgrade: Economic Reality Check (Don't trust DB if file is missing).
+        """
         h = file_hash or RobustUtils.calculate_hash(file_path)
-        return h in self.processed_hashes
+        
+        # 1. DB Check
+        if h not in self.processed_hashes:
+            return False
+            
+        # 2. Reality Check (Economy Guard)
+        # Find the expected report path
+        parent = os.path.dirname(file_path)
+        stem = os.path.splitext(os.path.basename(file_path))[0]
+        report_path = os.path.join(parent, f"report_{stem}.md")
+        
+        if os.path.exists(report_path) and os.path.getsize(report_path) > 100:
+            return True
+            
+        logging.warning(f"📉 Identity Mismatch: Logic says done, Reality says missing. Re-processing: {os.path.basename(file_path)}")
+        return False
 
     def mark_done(self, file_path: str, file_hash: str, metadata: Optional[Dict] = None) -> None:
         """Saves a file as completed in the persistent store."""
@@ -154,7 +175,28 @@ class StateTracker:
             "timestamp": time.time(),
             "meta": metadata or {}
         }
+        # Clear any fault history on success
+        if "fault_history" in self.state and file_hash in self.state["fault_history"]:
+            del self.state["fault_history"][file_hash]
+            
         self.processed_hashes.add(file_hash)
+        self._save()
+
+    def get_fault_tier(self, file_hash: str) -> int:
+        """Retrieves the last recorded failure tier for this file (Persistence Memory)."""
+        history = self.state.get("fault_history", {})
+        if file_hash in history:
+            return history[file_hash].get("tier", 1)
+        return 1
+
+    def record_fault(self, file_hash: str, tier: int, reason: str) -> None:
+        """Records a failure to persist the escalation state."""
+        if "fault_history" not in self.state: self.state["fault_history"] = {}
+        self.state["fault_history"][file_hash] = {
+            "tier": tier,
+            "reason": reason,
+            "timestamp": time.time()
+        }
         self._save()
 
     def _save(self) -> None:
@@ -399,6 +441,48 @@ class LinkParser:
         except Exception as e:
             logging.error(f"🔗 Link extraction failed: {e}")
         return None
+
+class SmartTriage:
+    """
+    The Industrial Triage Center.
+    Routes files to Quarantine based on their "Hope" level.
+    """
+    QUARANTINE_ROOT = os.path.join(ROOT_DIR, "_QUARANTINE_")
+    
+    @staticmethod
+    def _ensure_dirs():
+        os.makedirs(os.path.join(SmartTriage.QUARANTINE_ROOT, "ICU_Salvageable"), exist_ok=True)
+        os.makedirs(os.path.join(SmartTriage.QUARANTINE_ROOT, "Low_Quality"), exist_ok=True)
+        os.makedirs(os.path.join(SmartTriage.QUARANTINE_ROOT, "Critical_Error"), exist_ok=True)
+
+    @staticmethod
+    def move_to_quarantine(file_path: str, reason: str, category: str) -> Optional[str]:
+        """
+        Moves a file to the appropriate quarantine zone.
+        """
+        SmartTriage._ensure_dirs()
+        if not os.path.exists(file_path): return None
+        
+        filename = os.path.basename(file_path)
+        dest_dir = os.path.join(SmartTriage.QUARANTINE_ROOT, category)
+        dest_path = os.path.join(dest_dir, filename)
+        
+        # Avoid overwriting existing quarantine files (append timestamp)
+        if os.path.exists(dest_path):
+            stem, ext = os.path.splitext(filename)
+            dest_path = os.path.join(dest_dir, f"{stem}_{int(time.time())}{ext}")
+
+        try:
+            shutil.move(file_path, dest_path)
+            # Write reason slip
+            reason_path = dest_path + ".reason.txt"
+            with open(reason_path, "w", encoding="utf-8") as f:
+                f.write(f"Reason: {reason}\nTimestamp: {time.ctime()}\n")
+            logging.warning(f"🚑 Triage: Moved {filename} to {category}. Reason: {reason}")
+            return dest_path
+        except Exception as e:
+            logging.error(f"❌ Triage Failed: {e}")
+            return None
 
 class ResearchPipeline:
     """The central engine for processing research folders and generating Gemini reports."""
@@ -680,6 +764,56 @@ class ResearchPipeline:
             if 'lock_path' in locals() and os.path.exists(os.path.normpath(lock_path)):
                 os.remove(os.path.abspath(os.path.normpath(lock_path)).strip())
 
+    async def run_with_ladder(self, file_path: str) -> Optional[str]:
+        """
+        Executes the logic with the 1M-2M-4M-10M Escalation Ladder.
+        """
+        file_hash = RobustUtils.calculate_hash(file_path)
+        start_tier = self.state_tracker.get_fault_tier(file_hash)
+        
+        for tier in range(start_tier, 5): # Tiers 1 to 4
+            timeout_map = {1: 60, 2: 120, 3: 240, 4: 600}
+            model_map = {1: 'gemini-2.0-flash', 2: 'gemini-1.5-flash', 3: 'gemini-1.5-pro', 4: 'gemini-1.5-pro'}
+            
+            timeout = timeout_map.get(tier, 600)
+            model_name = model_map.get(tier, 'gemini-1.5-pro')
+            
+            logging.info(f"🪜 Ladder Tier {tier}/4: {model_name} (Timeout: {timeout}s) for {os.path.basename(file_path)}")
+            
+            try:
+                # Dynamically set priority for this run
+                self.models_priority = [model_name] 
+                
+                # Strict Timeout Execution
+                report_path = await asyncio.wait_for(
+                    self.run_gemini_research(file_path), 
+                    timeout=timeout
+                )
+                
+                if report_path:
+                    # Success: Clear fault history is handled in mark_done, but we can double check
+                    return report_path
+                    
+            except asyncio.TimeoutError:
+                logging.warning(f"⏳ Tier {tier} Timed Out ({timeout}s). Escalating...")
+                self.state_tracker.record_fault(file_hash, tier + 1, "Timeout")
+                # Continue loop to next tier
+                
+            except TerminalResearchError as e:
+                logging.error(f"🛑 Terminal Error in Tier {tier}: {e}")
+                # Fail Fast: Critical Error
+                SmartTriage.move_to_quarantine(file_path, str(e), "Critical_Error")
+                return None
+                
+            except Exception as e:
+                logging.warning(f"⚠️ Tier {tier} Failed: {e}. Escalating...")
+                self.state_tracker.record_fault(file_hash, tier + 1, str(e))
+                # Continue loop
+        
+        # If we exit loop, all tiers failed.
+        logging.error(f"❌ Ladder Exhausted (Tier 4 Failed). Moving to ICU.")
+        SmartTriage.move_to_quarantine(file_path, "Ladder Exhausted (Max Retries)", "ICU_Salvageable")
+        return None
     async def run_folder_synthesis(self, folder_path: str) -> Optional[str]:
         """
         Phase 1.5: Synthesizes insights from all reports in a folder.
@@ -864,7 +998,8 @@ class AsyncProcessor:
         Args:
             file_path: The path to the file to be processed.
         """
-        report_path: Optional[str] = await self.pipeline.run_gemini_research(file_path)
+        # V3 Upgrade: Use Ladder instead of direct call
+        report_path: Optional[str] = await self.pipeline.run_with_ladder(file_path)
         if not report_path: 
             return None
         
@@ -889,11 +1024,43 @@ class AsyncProcessor:
         automator_script = os.path.join(os.path.dirname(__file__), "notebooklm_automator.py")
         
         map_file = os.path.join(self.pipeline.root_dir, ".notebook_map.json")
-        proc = await asyncio.create_subprocess_exec(
-            sys.executable, automator_script, upload_package_path, topic, map_file, topic_id,
-            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await proc.communicate()
+        
+        # Cycle 6.2: Smart Resilience Loop (The Iron Hand)
+        retry_count = 0
+        max_retries = 10
+        
+        while True:
+            proc = await asyncio.create_subprocess_exec(
+                sys.executable, automator_script, upload_package_path, topic, map_file, topic_id,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await proc.communicate()
+            
+            if proc.returncode == 0:
+                break
+            
+            stderr_text = stderr.decode()
+            # FATAL ERROR CHECK: Cookie/Auth issues cannot be fixed by retrying.
+            if "Authentication failed" in stderr_text or "Cookie" in stderr_text or "expected string" in stderr_text:
+                logging.error(f"⛔ Fatal Auth Error for {topic}: {stderr_text.strip()}")
+                # V3 Upgrade: Move to Critical_Error immediately
+                SmartTriage.move_to_quarantine(file_path, f"NotebookLM Auth Error: {stderr_text.strip()}", "Critical_Error")
+                return None
+            
+            # Circuit Breaker
+            retry_count += 1
+            if retry_count > max_retries:
+                logging.error(f"❌ Circuit Breaker Tripped for {topic} after {max_retries} attempts.")
+                # V3 Upgrade: Move to ICU for later retry
+                SmartTriage.move_to_quarantine(file_path, f"NotebookLM Upload Timeout ({max_retries} retries)", "ICU_Salvageable")
+                return None
+            
+            # Exponential Backoff (Smart Resilience)
+            wait_time = 60 * (2 ** (retry_count - 1))
+            logging.warning(f"⚠️ Upload failed for {topic}. Retrying in {wait_time}s (Attempt {retry_count}/{max_retries})...")
+            # In a real async loop we should use asyncio.sleep, but we need to ensure we don't block everything?
+            # Since this is an async function (process_folder), asyncio.sleep IS non-blocking to other tasks!
+            await asyncio.sleep(wait_time)
         
         # Semantic Renaming
         # Phase I: Robust Topic Resolution (Platinum Patch)
@@ -1142,6 +1309,27 @@ def main() -> None:
     check_engine_singleton()
     # L17: Environmental Integrity Check (Exorcism Shield)
     RobustUtils.verify_home_path()
+    
+    # V3: Night Nurse - ICU Rounds
+    # Scans for salvageable files and moves them back to input for a specialized retry.
+    icu_dir = os.path.join(ROOT_DIR, "_QUARANTINE_", "ICU_Salvageable")
+    if os.path.exists(icu_dir):
+        logging.info("👩‍⚕️ Night Nurse: Making rounds in ICU...")
+        for f in os.listdir(icu_dir):
+            if f.startswith("."): continue
+            
+            src = os.path.join(icu_dir, f)
+            # If it's a file (not a reason.txt)
+            if os.path.isfile(src) and not f.endswith(".reason.txt"):
+                # Resurrect to a special folder 
+                resurrect_dir = os.path.join(ROOT_DIR, "input_thoughts", "Resurrected_ICU")
+                os.makedirs(resurrect_dir, exist_ok=True)
+                dest = os.path.join(resurrect_dir, f)
+                try:
+                    shutil.move(src, dest)
+                    logging.info(f"✨ Resurrected: {f} -> input_thoughts/Resurrected_ICU")
+                except Exception as e:
+                    logging.error(f"⚰️ Failed to resurrect {f}: {e}")
     
     # L18 Persistence Store: Global Sync Edition (Inside ROOT_DIR)
     state_file = os.path.join(ROOT_DIR, ".squirrel_state.json")

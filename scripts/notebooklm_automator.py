@@ -24,17 +24,18 @@ async def load_cookies() -> Optional[List[Dict[str, Any]]]:
                 raw_cookies = data["cookies"]
                 if isinstance(raw_cookies, list):
                     for c in raw_cookies:
+                        # L19 Robustness: Coerce all cookie fields to string to prevent 'expected string, got object' error
                         cookies.append({
-                            "name": c.get("name"),
-                            "value": c.get("value"),
-                            "domain": c.get("domain", ".google.com"),
-                            "path": c.get("path", "/")
+                            "name": str(c.get("name", "")),
+                            "value": str(c.get("value", "")),
+                            "domain": str(c.get("domain", ".google.com")),
+                            "path": str(c.get("path", "/"))
                         })
                 elif isinstance(raw_cookies, dict):
                     for name, value in raw_cookies.items():
                         cookies.append({
-                            "name": name,
-                            "value": value,
+                            "name": str(name),
+                            "value": str(value),
                             "url": "https://notebooklm.google.com", 
                             "secure": True
                         })
