@@ -71,17 +71,24 @@ os.makedirs(os.path.abspath(os.path.normpath(ROOT_DIR)).strip(), exist_ok=True)
 def check_engine_singleton() -> bool:
     """
     Prevents multiple instances of the research engine from running.
+    Lock is placed in /tmp to ensure local machine scope (bypassing iCloud sync).
     
     Returns:
         True if the lock is acquired, sys.exit() otherwise.
     """
-    lock_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".engine.lock")
+    import getpass
+    
+    username = getpass.getuser()
+    # L18 Stability: Strictly machine-local lock in /tmp to avoid iCloud sync collisions.
+    lock_file = os.path.join("/tmp", f"flash_squirrel_{username}.lock")
+    
     if os.path.exists(lock_file):
         try:
             with open(lock_file, "r") as f:
                 old_pid = int(f.read().strip())
                 os.kill(old_pid, 0)
                 logging.error(f"❌ Concurrent Engine Blocked (PID: {old_pid}).")
+                logging.warning(f"💡 Local machine lock detected at: {lock_file}")
                 sys.exit(1)
         except (ValueError, ProcessLookupError, OSError):
             # L15: Transparent handling for stale locks
@@ -91,7 +98,8 @@ def check_engine_singleton() -> bool:
         with open(lock_file, "w") as f:
             f.write(str(os.getpid()))
         import atexit
-        atexit.register(lambda: os.remove(os.path.abspath(os.path.normpath(lock_file)).strip()) if os.path.exists(lock_file) else None)
+        # Robust Cleanup: Ensure lock is removed on exit
+        atexit.register(lambda: os.remove(lock_file) if os.path.exists(lock_file) else None)
         return True
     except Exception as e:
         logging.warning(f"⚠️ Singleton Lock failed: {e}")
@@ -121,10 +129,10 @@ class StateTracker:
             try:
                 with open(self.state_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.1"}
+                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.2"}
             except Exception as e:
                 logging.error(f"⚠️ State load failed: {e}")
-        return {"processed": {}, "version": "1.1.1"}
+        return {"processed": {}, "version": "1.1.2"}
 
     def _sync_hashes(self) -> None:
         processed = self.state.get("processed", {})
@@ -888,11 +896,17 @@ class AsyncProcessor:
         stdout, stderr = await proc.communicate()
         
         # Semantic Renaming
+        # Phase I: Robust Topic Resolution (Platinum Patch)
         output_lines = stdout.decode().strip().split('\n')
         new_topic = None
         for line in reversed(output_lines):
-            if line.startswith("RESULT:"):
-                new_topic = line.replace("RESULT:", "").strip()
+            clean_line = line.strip()
+            if clean_line.startswith("RESULT:"):
+                new_topic = clean_line.replace("RESULT:", "").strip()
+                # Ensure we don't capture logs by accident
+                if "🚀" in new_topic or "⚠️" in new_topic:
+                    logging.warning(f"⚠️ Caught mangled RESULT: {new_topic}. Validating...")
+                    continue 
                 break
         
         await self.pipeline.generate_visualizations(content_to_push, folder_path)
