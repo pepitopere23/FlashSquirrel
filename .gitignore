@@ -13,6 +13,8 @@ auth.json
 .notebook_map.json
 *.log
 *.bak
+.squirrel_state.json
+.engine.lock
 chrome_profile_notebooklm/
 
 # 📂 Local Data (Modules)

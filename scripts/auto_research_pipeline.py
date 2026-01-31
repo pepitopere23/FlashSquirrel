@@ -19,8 +19,11 @@ import random
 import asyncio
 import logging
 import shutil
-from typing import Optional, List, Any, Dict
-from watchdog.observers import Observer
+import socket
+import hashlib
+import json
+from typing import Optional, List, Any, Dict, Set
+from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
 from google import genai
 from google.genai import types
@@ -97,8 +100,76 @@ def check_engine_singleton() -> bool:
 
 
 
+# --- Phase L+: Persistence Logic ---
+class StateTracker:
+    """
+    Persistent state manager for FlashSquirrel to prevent redundant processing 
+    and track file history across sessions and machines.
+    """
+    def __init__(self, state_file: str):
+        self.state_file = state_file
+        self.state: Dict[str, Any] = self._load()
+        # memory set for fast lookup: {hash}
+        self.processed_hashes: Set[str] = set()
+        self._sync_hashes()
+        # Ensure file exists
+        if not os.path.exists(self.state_file):
+            self._save()
+
+    def _load(self) -> Dict[str, Any]:
+        if os.path.exists(self.state_file):
+            try:
+                with open(self.state_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.0"}
+            except Exception as e:
+                logging.error(f"⚠️ State load failed: {e}")
+        return {"processed": {}, "version": "1.1.0"}
+
+    def _sync_hashes(self) -> None:
+        processed = self.state.get("processed", {})
+        for _, info in processed.items():
+            h = info.get("hash")
+            if h: self.processed_hashes.add(h)
+
+    def is_processed(self, file_path: str, file_hash: Optional[str] = None) -> bool:
+        """Check if a file hash has already been finished."""
+        h = file_hash or RobustUtils.calculate_hash(file_path)
+        return h in self.processed_hashes
+
+    def mark_done(self, file_path: str, file_hash: str, metadata: Optional[Dict] = None) -> None:
+        """Saves a file as completed in the persistent store."""
+        if "processed" not in self.state: self.state["processed"] = {}
+        
+        self.state["processed"][file_path] = {
+            "hash": file_hash,
+            "timestamp": time.time(),
+            "meta": metadata or {}
+        }
+        self.processed_hashes.add(file_hash)
+        self._save()
+
+    def _save(self) -> None:
+        try:
+            with open(self.state_file, "w", encoding="utf-8") as f:
+                json.dump(self.state, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logging.error(f"❌ State save failed: {e}")
+
 class RobustUtils:
     """Utility class for cross-platform file and iCloud synchronization handling."""
+    
+    @staticmethod
+    def calculate_hash(file_path: str) -> str:
+        """Generates a SHA-256 hash of a file's content for deduplication."""
+        sha256 = hashlib.sha256()
+        try:
+            with open(file_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256.update(chunk)
+            return sha256.hexdigest()
+        except Exception:
+            return "hash_error_" + str(time.time())
     
     @staticmethod
     def is_file_stable(file_path: str, wait_time: float = 2.0) -> bool:
@@ -209,6 +280,49 @@ class RobustUtils:
         return new_id
 
     @staticmethod
+    def verify_home_path() -> None:
+        """
+        L16/L17/L18 Resilience: Environmental Sovereign Guard.
+        Prevents 'Zombie Squirrels' (same machine) and 'Dual-Runner Collisions' (multi-machine).
+        """
+        script_actual_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        current_machine = socket.gethostname()
+        owner_id = os.getenv("RESEARCH_OWNER_ID")
+        
+        # 1. Host Sovereignty Check
+        if owner_id and owner_id != current_machine:
+            logging.info(f"💤 Sovereign Mode: Current machine ({current_machine}) is NOT the designated runner ({owner_id}).")
+            logging.info("Standing by. (Manual tests still allowed if bypass engaged).")
+            # In background mode, we exit. In manual mode, we might warn.
+            if os.getenv("PIPELINE_BG_MODE") == "1":
+                sys.exit(0)
+            return
+
+        # 2. Local Path Integrity (Zombie Defense)
+        home_marker = os.path.join(ROOT_DIR, ".squirrel_home_lock")
+        current_identity = f"{current_machine}|{script_actual_path}"
+        
+        if not os.path.exists(home_marker):
+            try:
+                with open(home_marker, "w") as f: f.write(current_identity)
+                logging.info(f"🏠 Home Territory Claimed: {current_machine}")
+            except Exception as e:
+                logging.warning(f"Metadata lock skipped: {e}")
+            return
+
+        try:
+            with open(home_marker, "r") as f:
+                content = f.read().strip()
+                if "|" in content:
+                    recorded_machine, recorded_path = content.split("|", 1)
+                    if recorded_machine == current_machine and recorded_path != script_actual_path:
+                        logging.critical("🛑 ZOMBIE ALERT: Mismatch on THIS machine!")
+                        logging.critical(f"Expected: {recorded_path}\nActual: {script_actual_path}")
+                        sys.exit(1)
+        except Exception:
+            pass
+
+    @staticmethod
     def should_ignore(file_path: str) -> bool:
         """
         Final authority on whether a file should be ignored by the research engine.
@@ -265,8 +379,9 @@ class LinkParser:
 class ResearchPipeline:
     """The central engine for processing research folders and generating Gemini reports."""
     
-    def __init__(self) -> None:
+    def __init__(self, state_tracker: StateTracker) -> None:
         """Initializes the Gemini client and model priorities."""
+        self.state_tracker = state_tracker
         if not GEMINI_API_KEY:
             logging.error("GEMINI_API_KEY not found in .env")
             sys.exit(1)
@@ -439,6 +554,13 @@ class ResearchPipeline:
             if not os.path.exists(file_path):
                 return None
 
+            # PERSISTENCE CHECK (Phase L+)
+            # Extra layer: If we just finished a hash check in add_task, 
+            # we do another quick one here to be 100% thread-safe.
+            file_hash = RobustUtils.calculate_hash(file_path)
+            if self.state_tracker.is_processed(file_path, file_hash):
+                logging.info(f"⏭️ Skipping (Already processed via hash): {filename}")
+                return None
             
             mime = self.get_mime_type(file_path)
             content_part = None
@@ -546,34 +668,34 @@ class ResearchPipeline:
         """
         folder_name = os.path.basename(folder_path)
         logging.info(f"🧠 [Phase 1.5] Synthesizing insights in: {folder_name}")
-        report_files = [f for f in os.listdir(folder_path) if f.startswith("report_") and f.endswith(".md")]
-        if not report_files: 
-            return None
-        
-        combined_text = ""
-        for rf in report_files:
-            with open(os.path.join(folder_path, rf), "r", encoding="utf-8") as f:
-                combined_text += f"\n\n=== SOURCE: {rf} ===\n" + f.read()
-
-        prompt = f"""
-        [ROLE: Synthesis Engine]
-        [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
-        Task: Synthesize these reports into a MASTER_SYNTHESIS.md. 
-        Folder Scope: {folder_name}
-        
-        CRITICAL REQUIREMENT:
-        You must generate a 'Conflict Matrix' that identifies competing viewpoints across these sources. Do NOT smooth out contradictions; expose them.
-        
-        Output Format:
-        # MASTER SYNTHESIS: [Topic]
-        
-        ## 1. Integrated Overview / 整合概述
-        ## 2. Conflict Matrix & Divergent Insights / 衝突矩陣與分歧洞見
-        ## 3. Consensus & Validated Facts / 共識與經驗證的事實
-        ## 4. Strategic Recommendations / 策略性建議
-        """
-        
         try:
+            report_files = [f for f in os.listdir(folder_path) if f.startswith("report_") and f.endswith(".md")]
+            if not report_files: 
+                return None
+            
+            combined_text = ""
+            for rf in report_files:
+                with open(os.path.join(folder_path, rf), "r", encoding="utf-8") as f:
+                    combined_text += f"\n\n=== SOURCE: {rf} ===\n" + f.read()
+
+            prompt = f"""
+            [ROLE: Synthesis Engine]
+            [LANGUAGE: Bilingual - English & Traditional Chinese (繁體中文)]
+            Task: Synthesize these reports into a MASTER_SYNTHESIS.md. 
+            Folder Scope: {folder_name}
+            
+            CRITICAL REQUIREMENT:
+            You must generate a 'Conflict Matrix' that identifies competing viewpoints across these sources. Do NOT smooth out contradictions; expose them.
+            
+            Output Format:
+            # MASTER SYNTHESIS: [Topic]
+            
+            ## 1. Integrated Overview / 整合概述
+            ## 2. Conflict Matrix & Divergent Insights / 衝突矩陣與分歧洞見
+            ## 3. Consensus & Validated Facts / 共識與經驗證的事實
+            ## 4. Strategic Recommendations / 策略性建議
+            """
+            
             response: Any = await self.generate_with_fallback(prompt, combined_text)
             if not response or not response.text: 
                 return None
@@ -634,14 +756,16 @@ class AsyncProcessor:
     """
     Handles file events in a queue to prevent blocking the Watchdog observer.
     """
-    def __init__(self, pipeline: ResearchPipeline):
+    def __init__(self, pipeline: ResearchPipeline, state_tracker: StateTracker):
         """
         Initializes the AsyncProcessor.
         
         Args:
             pipeline: An instance of ResearchPipeline to use for processing.
+            state_tracker: Persistent state manager.
         """
         self.pipeline = pipeline
+        self.state_tracker = state_tracker
         self.queue = asyncio.Queue()
         self.active_tasks: set = set() # De-duplication Shield
         self.renaming_lock = asyncio.Lock() # Phase L+: Rename Shield
@@ -928,14 +1052,32 @@ class InputHandler(FileSystemEventHandler):
         self.processor.add_task(file_path)
         return None
 
-async def scan_existing_files(processor: AsyncProcessor) -> None:
+async def scan_existing_files(processor: AsyncProcessor, state_tracker: StateTracker) -> None:
     """
     Scans and processes files that already exist before script started.
+    Includes an initial sanitation pass to repair mangled iCloud folder names.
     
     Args:
         processor: The AsyncProcessor instance.
+        state_tracker: Persistent state manager.
     """
     logging.info("🔎 Scanning for existing files...")
+    
+    # 🛡️ Guardian Logic: Initial Sanitation Pass (Fixes mangled \n folders)
+    try:
+        all_items = os.listdir(ROOT_DIR)
+        for item in all_items:
+            if "\n" in item or "\r" in item:
+                old_path = os.path.join(ROOT_DIR, item)
+                clean_name = item.replace("\n", "_").replace("\r", "_").strip()
+                new_path = os.path.join(ROOT_DIR, clean_name)
+                # Only rename if clean version doesn't exist yet
+                if not os.path.exists(new_path):
+                    os.rename(old_path, new_path)
+                    logging.info(f"🛡️ Auto-Sanitized path: {repr(item)} -> {clean_name}")
+    except Exception as e:
+        logging.debug(f"Initial sanitation pass skipped: {e}")
+
     for root, dirs, files in os.walk(ROOT_DIR):
         for file in files:
             file_path: str = os.path.join(root, file)
@@ -943,12 +1085,18 @@ async def scan_existing_files(processor: AsyncProcessor) -> None:
             if RobustUtils.should_ignore(file_path):
                 continue
             
-            # Skip if already processed (Report OR Failure exists)
+            # Skip if already processed (Report OR Failure OR State DB exists)
             stem = os.path.splitext(file)[0]
             report_name = f"report_{stem}.md"
             failure_name = f"RESEARCH_FAILURE_{stem}.md"
             
+            # Layer 1: Conventional check
             if os.path.exists(os.path.join(root, report_name)) or os.path.exists(os.path.join(root, failure_name)):
+                continue
+            
+            # Layer 2: Persistence check (The "Zero-Amnesia" Shield)
+            if state_tracker.is_processed(file_path):
+                logging.debug(f"⏭️ Skipping (Recorded in state DB): {file}")
                 continue
 
             logging.info(f"📂 Found unprocessed historical file: {file}")
@@ -962,9 +1110,15 @@ def main() -> None:
     """
     # L16/Singleton Guard
     check_engine_singleton()
+    # L17: Environmental Integrity Check (Exorcism Shield)
+    RobustUtils.verify_home_path()
     
-    pipeline: ResearchPipeline = ResearchPipeline()
-    processor: AsyncProcessor = AsyncProcessor(pipeline)
+    # L+ Persistence Store
+    state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".squirrel_state.json")
+    state_tracker = StateTracker(state_file)
+    
+    pipeline: ResearchPipeline = ResearchPipeline(state_tracker)
+    processor: AsyncProcessor = AsyncProcessor(pipeline, state_tracker)
     handler: InputHandler = InputHandler(processor)
     
     observer: Observer = Observer()
@@ -989,7 +1143,7 @@ def main() -> None:
     
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
     # Schedule historical scan
-    loop.run_until_complete(scan_existing_files(processor))
+    loop.run_until_complete(scan_existing_files(processor, state_tracker))
     
     # Start the worker
     try:

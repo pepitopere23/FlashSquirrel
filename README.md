@@ -8,6 +8,11 @@
 [![Industrial-27 Omega](https://img.shields.io/badge/Certification-Omega--27-gold?style=for-the-badge&logo=shield)](./docs/INDUSTRIAL_STANDARDS_27L.md)  
 **「通過 27 層自動化軟體工程驗證 (17 層靜態審計 + 10 層運行驗證)。」**
 
+### 🛡️ 穩定性版本 | Stability Version: v1.1.0-gold
+- **[NEW] 狀態持久化 (State Persistence)**: 解決 iCloud 同步導致的重複處理。
+- **[NEW] 雜湊校驗 (Hash Deduplication)**: SHA-256 指紋識別。
+- **[NEW] 環境自癒 (Auto-Sanitation)**: 自動修復 `\n` 路徑污染。
+
 ---
 
 [繁體中文](#繁體中文) | [English](#english)
@@ -159,7 +164,7 @@ graph TD
 
 ### 2. Apple 全家桶用戶 (Apple Ecosystem)
 1.  **環境配置**：在 iCloud Drive 中確保有一個名為 **`研究工作流`** 的資料夾（名稱必須完全一致，以匹配 iOS 捷徑）。
-2.  **啟動同步**：[下載 iOS 快捷指令](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) 並將檔案（照片、網頁、PDF）存入該資料夾。
+2.  **啟動同步**：[下載 iOS 快捷指令 v1.0.1](https://www.icloud.com/shortcuts/692e894881ad4f15b66a26a9b60ea2de) 並將檔案（照片、網頁、PDF）存入該資料夾。
 3.  **自動化**：手機上傳，Mac 在後台（全自動模式）或前台（半自動模式）自動執行研發與更名。
 
 ---
@@ -305,7 +310,7 @@ First time exploring? Don't worry about any technical setup. Just open the app a
 ### 2. Apple Ecosystem
 1.  **Environment**: Ensure you have a folder named **`研究工作流`** in your iCloud Drive (The name must match the iOS Shortcut exactly).
 2.  **One-Word Start**: Run `python start.py` and press **Enter** to confirm the default path.
-3.  **Syncing**: [Download the iOS Shortcut](https://www.icloud.com/shortcuts/b7238297c2494f73addcd1b7330bdebf) and share files (photos, web, PDFs) to that folder.
+3.  **Syncing**: [Download the iOS Shortcut v1.0.1](https://www.icloud.com/shortcuts/692e894881ad4f15b66a26a9b60ea2de) and share files (photos, web, PDFs) to that folder.
 4.  **iCloud Automation**: Captured on iPhone; processed and renamed automatically on your Mac.
 
 > [!IMPORTANT]
