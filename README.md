@@ -8,9 +8,10 @@
 [![Industrial-27 Omega](https://img.shields.io/badge/Certification-Omega--27-gold?style=for-the-badge&logo=shield)](./docs/INDUSTRIAL_STANDARDS_27L.md)  
 **「通過 27 層自動化軟體工程驗證 (17 層靜態審計 + 10 層運行驗證)。」**
 
-### 🛡️ 穩定性版本 | Stability Version: v1.1.0-gold
-- **[NEW] 狀態持久化 (State Persistence)**: 解決 iCloud 同步導致的重複處理。
-- **[NEW] 雜湊校驗 (Hash Deduplication)**: SHA-256 指紋識別。
+### 🛡️ 穩定性版本 | Stability Version: v1.1.1-gold
+- **[NEW] 全球狀態同步 (Global Brain Sync)**: 狀態庫移至 iCloud 根目錄，支援多機操作。
+- **[NEW] 雜湊穩定護盾 (Hash Stability Guard)**: 防止因 iCloud 不同步導致的雜湊誤判。
+- **[NEW] 持久化狀態 (State Persistence)**: SHA-256 指紋識別，解決重複處理。
 - **[NEW] 環境自癒 (Auto-Sanitation)**: 自動修復 `\n` 路徑污染。
 
 ---

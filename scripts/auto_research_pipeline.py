@@ -121,10 +121,10 @@ class StateTracker:
             try:
                 with open(self.state_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.0"}
+                    return data if isinstance(data, dict) else {"processed": {}, "version": "1.1.1"}
             except Exception as e:
                 logging.error(f"⚠️ State load failed: {e}")
-        return {"processed": {}, "version": "1.1.0"}
+        return {"processed": {}, "version": "1.1.1"}
 
     def _sync_hashes(self) -> None:
         processed = self.state.get("processed", {})
@@ -161,7 +161,23 @@ class RobustUtils:
     
     @staticmethod
     def calculate_hash(file_path: str) -> str:
-        """Generates a SHA-256 hash of a file's content for deduplication."""
+        """
+        Generates a SHA-256 hash with a stability guard to prevent 
+        collision with partially synced iCloud files.
+        """
+        if not os.path.exists(file_path):
+            return "ghost_file_" + str(time.time())
+            
+        # L18 Stability Guard: Ensure file is not being written to (1.5s silent window)
+        try:
+            size_initial = os.path.getsize(file_path)
+            time.sleep(1.5)
+            if os.path.getsize(file_path) != size_initial:
+                logging.debug(f"⏳ File '{os.path.basename(file_path)}' is unstable. Retrying hash...")
+                return RobustUtils.calculate_hash(file_path) # Recursive stability wait
+        except Exception:
+            pass
+
         sha256 = hashlib.sha256()
         try:
             with open(file_path, "rb") as f:
@@ -1113,8 +1129,8 @@ def main() -> None:
     # L17: Environmental Integrity Check (Exorcism Shield)
     RobustUtils.verify_home_path()
     
-    # L+ Persistence Store
-    state_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".squirrel_state.json")
+    # L18 Persistence Store: Global Sync Edition (Inside ROOT_DIR)
+    state_file = os.path.join(ROOT_DIR, ".squirrel_state.json")
     state_tracker = StateTracker(state_file)
     
     pipeline: ResearchPipeline = ResearchPipeline(state_tracker)
