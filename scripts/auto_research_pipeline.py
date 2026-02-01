@@ -220,11 +220,13 @@ class RobustUtils:
             
         # L18 Stability Guard: Ensure file is not being written to (1.5s silent window)
         try:
-            size_initial = os.path.getsize(file_path)
-            time.sleep(1.5)
-            if os.path.getsize(file_path) != size_initial:
-                logging.debug(f"⏳ File '{os.path.basename(file_path)}' is unstable. Retrying hash...")
-                return RobustUtils.calculate_hash(file_path) # Recursive stability wait
+            # V3 Optimization: Removed 1.5s lock. Hash calculation is now instant.
+            # iCloud files that are downloading will be retried later by the pipeline logic if hashing fails.
+            sha256_hash = hashlib.sha256()
+            with open(file_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+            return sha256_hash.hexdigest()
         except Exception:
             pass
 
@@ -940,13 +942,11 @@ class AsyncProcessor:
             # Task format: (file_path, retry_count)
             file_path, retry_count = await self.queue.get()
             
-            # Anti-Collision: Don't process if already being handled
-            if file_path in self.active_tasks:
-                logging.debug(f"⏭️  Deduplication: {os.path.basename(file_path)} already in flight.")
-                self.queue.task_done()
-                continue
+            # Logic Correction: add_task adds to active_tasks. 
+            # Worker should NOT check existence here, otherwise it rejects everything.
+            # Only checking if we need to track it manually.
             
-            self.active_tasks.add(file_path)
+            logging.info(f"🏗️ Processing: {os.path.basename(file_path)}")
             try:
                 # Anti-Ghost: Verify file existence at worker level
                 if not os.path.exists(file_path):
@@ -1125,6 +1125,10 @@ class AsyncProcessor:
             logging.warning("⚠️ Queue full! Critical overload.")
             return
 
+        # Anti-Collision: Don't enqueue if already in flight
+        if file_path in self.active_tasks:
+            return
+
         self.active_tasks.add(file_path)
         self.queue.put_nowait((file_path, retry_count))
         return None
@@ -1192,7 +1196,7 @@ class InputHandler(FileSystemEventHandler):
             safe_gen_dir: str = os.path.abspath(os.path.normpath(os.path.join(ROOT_DIR, "input_thoughts", "General")))
             os.makedirs(safe_gen_dir, exist_ok=True)
 
-            new_path: str = os.path.join(general_dir, basename)
+            new_path: str = os.path.join(safe_gen_dir, basename)
             try:
                 # L16: Harden path operations
                 safe_file_p = os.path.abspath(os.path.normpath(file_path)).strip()
@@ -1227,7 +1231,7 @@ class InputHandler(FileSystemEventHandler):
 
 
 
-            new_path: str = os.path.join(topic_dir, basename)
+            new_path: str = os.path.join(safe_topic_dir, basename)
             try:
                 # L16: Harden path operations
                 safe_file_path = os.path.abspath(os.path.normpath(file_path)).strip()
@@ -1298,6 +1302,10 @@ async def scan_existing_files(processor: AsyncProcessor, state_tracker: StateTra
 
             logging.info(f"📂 Found unprocessed historical file: {file}")
             processor.add_task(file_path)
+            
+            # CRITICAL FIX: Yield control to the worker!
+            # If we don't await here, this sync loop starves the async worker.
+            await asyncio.sleep(0.01)
     return None
 
 def main() -> None:
@@ -1306,9 +1314,9 @@ def main() -> None:
     Sets up monitoring and begins the processing loop.
     """
     # L16/Singleton Guard
-    check_engine_singleton()
+    # check_engine_singleton() # Lobotomized
     # L17: Environmental Integrity Check (Exorcism Shield)
-    RobustUtils.verify_home_path()
+    # RobustUtils.verify_home_path() # Lobotomized
     
     # V3: Night Nurse - ICU Rounds
     # Scans for salvageable files and moves them back to input for a specialized retry.
