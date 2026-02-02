@@ -38,3 +38,4 @@ stats_*.json
 implementation_plan.md
 tracking_report.md
 report_pipeline_audit.md
+scripts/nuclear_cleanup.py

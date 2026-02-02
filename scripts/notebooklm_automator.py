@@ -177,9 +177,14 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
 
             if map_file and mapping_key:
                 save_title = final_title
-                if save_title == "Untitled" or save_title == "未命名":
+                # V4 FIX: The "Untitled Virus" Patch
+                # If Google failed to name it, DO NOT save "Untitled" to the map.
+                # Forcefully use the filename (title_hint) as the canonical title.
+                if "Untitled" in save_title or "未命名" in save_title:
                     save_title = title_hint if title_hint else mapping_key
-                    print(f"⚠️ Title resolution weak. Fallback mapping saved as: {save_title}")
+                    print(f"⚠️ Title resolution stuck on 'Untitled'. Forcefully using filename: {save_title}")
+                    # Also update final_title so the pipeline receives the correct name
+                    final_title = save_title
                 
                 save_mapping(map_file, mapping_key, save_title)
 
