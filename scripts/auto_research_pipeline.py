@@ -1013,13 +1013,36 @@ class AsyncProcessor:
         synthesis_path: Optional[str] = await self.pipeline.run_folder_synthesis(folder_path)
         
         content_to_push: str = ""
-        with open(report_path, 'r') as f: content_to_push += f.read()
+        # FIX A: Robust iCloud Sync Handler with Retry Logic
+        max_retries = 3
+        retry_delay = 2  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                with open(report_path, 'r') as f: 
+                    content_to_push += f.read()
+                break  # Success, exit retry loop
+            except FileNotFoundError as e:
+                if attempt < max_retries - 1:
+                    logging.warning(f"⚠️ iCloud sync delay for {os.path.basename(report_path)}, retrying in {retry_delay}s... (Attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    logging.error(f"❌ Failed to read report after {max_retries} attempts: {report_path}")
+                    # Log to failed files for manual review
+                    with open(os.path.join(ROOT_DIR, "failed_files.log"), "a") as ff:
+                        ff.write(f"{datetime.now().isoformat()} - {report_path}\n")
+                    return None
+            except Exception as e:
+                logging.error(f"❌ Unexpected error reading report {report_path}: {e}")
+                return None
+            
         if synthesis_path:
             try:
                 with open(synthesis_path, 'r') as f: 
                     content_to_push += "\n\n" + f.read()
             except Exception as e:
-                logging.warning(f"Could not read synthesis for upload: {e}")
+                logging.warning(f"⚠️ Could not read synthesis for upload: {e}")
 
         upload_package_path: str = os.path.join(folder_path, "upload_package.md")
         with open(upload_package_path, "w", encoding="utf-8") as f: f.write(content_to_push)
@@ -1386,4 +1409,41 @@ def main() -> None:
     return None
 
 if __name__ == "__main__":
-    main()
+    # FIX B: Single-Process Lock Mechanism
+    LOCK_FILE = os.path.join(ROOT_DIR, ".pipeline.lock")
+    
+    # Check if another instance is running
+    if os.path.exists(LOCK_FILE):
+        try:
+            with open(LOCK_FILE, 'r') as f:
+                old_pid = int(f.read().strip())
+            # Check if the process is still alive
+            try:
+                os.kill(old_pid, 0)  # Signal 0 just checks if process exists
+                logging.warning(f"⚠️ Another instance is already running (PID {old_pid}). Exiting.")
+                sys.exit(0)
+            except OSError:
+                # Process is dead, remove stale lock file
+                logging.info(f"🧹 Removing stale lock file (PID {old_pid} is dead)")
+                os.remove(LOCK_FILE)
+        except Exception as e:
+            logging.warning(f"⚠️ Error checking lock file: {e}, proceeding anyway")
+    
+    # Create lock file with our PID
+    try:
+        with open(LOCK_FILE, 'w') as f:
+            f.write(str(os.getpid()))
+        logging.info(f"🔒 Process lock acquired (PID {os.getpid()})")
+    except Exception as e:
+        logging.error(f"❌ Failed to create lock file: {e}")
+    
+    try:
+        main()
+    finally:
+        # Clean up lock file on exit
+        try:
+            if os.path.exists(LOCK_FILE):
+                os.remove(LOCK_FILE)
+                logging.info("🔓 Process lock released")
+        except Exception as e:
+            logging.warning(f"⚠️ Failed to remove lock file: {e}")
