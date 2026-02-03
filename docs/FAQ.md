@@ -12,27 +12,26 @@
 **A**: 請檢查以下三點：
 1.  **引擎是否啟動**：確保您已經執行了 `python start.py` 且視窗沒有關閉。
 2.  **檔名格式**：系統會監控 `input_thoughts/` 底下的 **「子資料夾」**。請不要直接把檔案丟在 `input_thoughts/` 根目錄，應該要建立一個如 `input_thoughts/我的研究主題/` 的資料夾。
-3.  **iCloud 同步**：如果您是使用手機上傳，Mac 可能還沒下載完畢。請打開 Finder 看看該檔案是否有一個「雲端下載」的圖示。
+3.  **iCloud 同步**：如果您是使用手機上傳，Mac 可能還沒下載完畢。FlashSquirrel 內建「下載等待」機制，會等到此圖示消失後才開始工作。
 
 ### Q2: 出現 `Quota Exceeded` 或 `429 Error` 怎麼辦？
 **A**: 這是因為您使用的是 **免費版 API**，Google 限制每分鐘的請求次數。
-*   **別擔心**：FlashSquirrel 內建自動排隊機制，它會每隔一段時間自動重試，您只需放著不管即可。
+*   **別擔心**：FlashSquirrel v1.0.0 內建 **「指數退避 (Exponential Backoff)」** 機制。它會自動暫停、等待、然後重試。您只需放著不管即可。
 *   **想解鎖極速**：建議前往 Google AI Studio 綁定信用卡開啟付費方案，費用極低（見 README 試算）。
 
-*   **解決方案**：請再次執行 `python setup_wizard.py`（或透過 `start.py` 重新配置），它會彈出瀏覽器讓您重新登入並擷取最新憑證。
+### Q3: 速度好像有點慢？能不能一次跑 10 篇？
+**A**: 系統刻意設計為 **單一序列處理 (Single Queue)**，速度約為 **1 分鐘/篇**。
+*   **原因**：如果同時開啟 10 個瀏覽器分頁去轟炸 NotebookLM，您的帳號極高機率會被 Google 判定為濫用 (Abuse) 而封鎖。
+*   **策略**：FlashSquirrel 選擇「穩定長跑」而非「短跑衝刺」，確保您的帳號安全。
 
-### Q4: 那個終端機（黑框框）可以關掉嗎？
-**A**: **目前不行**。
-*   這個視窗是 FlashSquirrel 的「肉身」，它必須開著才能監控資料夾的變動。如果您關掉它，松鼠就下班了，不會再自動幫您研發。
-*   **專業提示**：如果您是高階用戶，可以使用 `scripts/com.user.research_pipeline.plist` 將其設定為後台服務，這樣就完全看不到視窗了。
+### Q4: Windows 能用嗎？
+**A**: **可以！(v1.0.0+)**
+*   最新版本已經完整支援 Windows。如果您遇到 `pathlib` 相關錯誤，請務必點擊 GitHub 上的 `Sync Fork` 進行更新。
+*   初次安裝請執行 `python setup_wizard.py`，它會自動處理 Windows 的環境設定。
 
-### Q5: 我在 Mac 上明明丟了檔案，為什麼它一直說「找不到檔案」？
-**A**: 這是典型的 **「權限不足」** 問題。
-*   **原因**：macOS 為了保護您的個資，預設禁止程式讀取 iCloud 或桌面。
-*   **解決方案**：
-    1. 前往「系統設定 -> 隱私與安全性 -> 完全磁碟取用權限」。
-    2. 點擊「+」號或手動將 **Terminal (終端機)** 或您的 IDE（如 Cursor, VS Code）勾選為開啟。
-    3. **關鍵：設定完畢後，請徹底關閉並重啟您的終端機視窗。**
+### Q5: 我可以用 `.docx` 或圖片嗎？
+**A**: **當然。**
+*   系統支援：`.md`, `.txt`, `.docx`, `.pdf`, `.jpg`, `.png`, 甚至 Mac 的網站連結 `.webloc`。
 
 ---
 
@@ -40,28 +39,27 @@
 
 ## English
 
-### Q1: I dropped the files into the folder, but why is there no report?
-**A**: Please check these three things:
-1.  **Is the Engine Running?**: Make sure you have executed `python start.py` and the terminal window remains open.
-2.  **Sub-folder Structure**: The system watches **sub-folders** inside `input_thoughts/`. Instead of dropping files into the root, create a folder like `input_thoughts/My_Project/`.
-3.  **iCloud Sync**: If uploading via mobile, your Mac might still be downloading the file. Check Finder for the "cloud download" icon next to the file.
+### Q1: I dropped the files, but no report?
+**A**: Check these:
+1.  **Is Engine Running?**: Ensure `python start.py` is active.
+2.  **Sub-folders**: Files must be inside a **sub-folder** (e.g., `input_thoughts/Topic_A/`), not the root.
+3.  **iCloud Sync**: The system waits for iCloud downloads to complete automatically.
 
-### Q2: What should I do if I see `Quota Exceeded` or `429 Error`?
-**A**: This occurs because you are using the **Free Tier API**, which has rate limits.
-*   **Don't Panic**: FlashSquirrel has a built-in auto-queuing mechanism. It will retry automatically, so you can just leave it running.
-*   **For Speed**: Consider enabling the Paid Tier in Google AI Studio. The cost is extremely low (see the table in README).
+### Q2: `Quota Exceeded` / `429 Error`?
+**A**: This is normal for the Free Tier API.
+*   **Solution**: Do nothing. FlashSquirrel v1.0.0 has **Exponential Backoff**. It will pause and retry automatically.
 
-*   **Solution**: Run `python setup_wizard.py` again (or re-configure via `start.py`). A browser window will open for you to log in and capture fresh credentials.
+### Q3: Can it be faster? Can I process 10 papers at once?
+**A**: The system deliberately uses a **Single Queue** (approx. 1 min/paper).
+*   **Safety**: Opening 10 browser tabs simultaneously triggers Google's Abuse Detection.
+*   **Strategy**: "Slow and steady" protects your account from being banned.
 
-### Q4: Can I close the terminal window?
-**A**: **Currently, no**.
-*   This window is the physical process of FlashSquirrel. It must stay open to "watch" your folders. If you close it, the "squirrel" goes home and stops working.
-*   **Pro Tip**: Advanced users can use the `scripts/com.user.research_pipeline.plist` to set it as a background service, making it truly invisible.
+### Q4: Does it work on Windows?
+**A**: **YES! (v1.0.0+)**
+*   Critical compatibility fixes have been applied. If you see errors, please `Sync Fork` on GitHub.
+*   Run `python setup_wizard.py` to auto-configure for Windows.
 
-### Q5: I'm on a Mac and dropped files, but it says "File not found"?
-**A**: This is a classic **"Permissions"** issue.
-*   **Cause**: macOS limits app access to iCloud or Desktop by default.
-*   **Solution**: 
-    1. Go to "System Settings -> Privacy & Security -> Full Disk Access".
-    2. Ensure **Terminal** (or your IDE like Cursor/VS Code) is toggled ON.
-    3. **Critical: After toggling, you must restart your Terminal application.**
+### Q5: Can I use `.docx` or images?
+**A**: **Yes.**
+*   Supported: `.md`, `.txt`, `.docx`, `.pdf`, `.jpg`, `.png`, and even `.webloc` (Mac links).
+
