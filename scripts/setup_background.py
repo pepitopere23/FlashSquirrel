@@ -68,7 +68,7 @@ def setup_windows():
     python_exe = sys.executable
     script_path = project_root / "scripts/auto_research_pipeline.py"
     
-    vbs_content = f'CreateObject("Wscript.Shell").Run "{python_exe} {script_path}", 0, False'
+    vbs_content = f'CreateObject("Wscript.Shell").Run """{python_exe}"" ""{script_path}""", 0, False'
     
     with open(vbs_path, "w") as f:
         f.write(vbs_content)
