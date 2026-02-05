@@ -39,7 +39,7 @@ Please perform the standardized maintenance ritual to restore full automation.
 1.  Open your terminal.
 2.  Run the following command:
     ```bash
-    python3 /Users/chenpeijun/Desktop/研究工作流/scripts/login_wizard.py
+    python3 {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'login_wizard.py')}
     ```
 3.  Follow the on-screen prompt to log in once.
 
@@ -50,11 +50,20 @@ Please perform the standardized maintenance ritual to restore full automation.
         with open(alert_file, "w", encoding="utf-8") as f:
             f.write(md_content)
         
-        # Open the Markdown file responsibly (using default editor)
-        subprocess.run(["open", alert_file], check=False)
-        
-        # Audio cue is still useful, but less aggressive sound
-        send_notification("System Status Update", "Authentication Refresh Required. See Report.", "Hero")
+        # Open the Markdown file responsibly (Cross-Platform)
+        if sys.platform == "darwin":
+            subprocess.run(["open", alert_file], check=False)
+            send_notification("System Status Update", "Authentication Refresh Required. See Report.", "Hero")
+        elif sys.platform == "win32":
+            os.startfile(alert_file)
+            print("🔔 Windows Notification: Authentication Refresh Required. Check the report on your Desktop.")
+        else:
+            # Linux/Other
+            try:
+                subprocess.run(["xdg-open", alert_file], check=False)
+            except:
+                print(f"Please open: {alert_file}")
+            
         print(f"📝 STATUS REPORT GENERATED: {alert_file}")
         
     except Exception as e:

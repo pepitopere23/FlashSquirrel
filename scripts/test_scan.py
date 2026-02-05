@@ -2,7 +2,7 @@
 import os
 import sys
 
-ROOT_DIR = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
+ROOT_DIR = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
 
 def should_ignore(file_path):
     basename = os.path.basename(file_path)

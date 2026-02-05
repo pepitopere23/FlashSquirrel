@@ -143,50 +143,63 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
             # Wait for processing and auto-naming
             await asyncio.sleep(25)
             
-            final_title = "Untitled"
-            try:
-                # Try to catch the title from the input field
-                title_el = page.locator("input[aria-label='Notebook title']")
-                if await title_el.count() == 0:
-                    title_el = page.locator("input[aria-label='筆記本標題']")
-                
-                if await title_el.count() > 0:
-                    final_title = await title_el.input_value()
-                    # If still "Untitled", wait a bit more
-                    if "Untitled" in final_title or "未命名" in final_title:
-                        print("🔄 Title is generic. Polling for AI update...")
-                        for _ in range(12): # Wait up to 60s
-                            await asyncio.sleep(5)
-                            final_title = await title_el.input_value()
-                            if "Untitled" not in final_title and "未命名" not in final_title and final_title.strip():
-                                break
-                
-                # Aesthetic Enhancement: Return to dashboard to get emoji title
-                await page.goto("https://notebooklm.google.com/")
-                await asyncio.sleep(5)
-                cards = await page.query_selector_all("mat-card")
-                for card in cards:
-                    text = await card.inner_text()
-                    lines = [l.strip() for l in text.split("\n") if l.strip()]
-                    if len(lines) >= 3 and final_title in lines[2]:
-                        emoji = lines[0]
-                        final_title = f"{emoji} {lines[2]}"
-                        break
-            except Exception as e:
-                print(f"⚠️ Error during card resolution: {e}")
+            # --- LAYER 1: Dashboard Property Scanning (Fast) ---
+            async def get_dashboard_title():
+                try:
+                    await page.goto("https://notebooklm.google.com/")
+                    await asyncio.sleep(5)
+                    # We look for the most recent card that isn't untitled
+                    cards = await page.locator("mat-card").all()
+                    for card in cards:
+                        aria = await card.get_attribute("aria-label")
+                        if aria and "Untitled" not in aria and "未命名" not in aria:
+                            # If we have a hint, verify it matches
+                            if title_hint and title_hint.lower() in aria.lower():
+                                return aria.strip()
+                        
+                        text = await card.inner_text()
+                        lines = [l.strip() for l in text.split("\n") if l.strip()]
+                        if len(lines) >= 3 and "Untitled" not in lines[2] and "未命名" not in lines[2]:
+                            if not title_hint or (title_hint.lower() in lines[2].lower()):
+                                emoji = lines[0] if len(lines[0]) < 3 else ""
+                                return f"{emoji} {lines[2]}".strip()
+                except:
+                    pass
+                return None
+
+            # --- LAYER 2: Inner Page Input Extraction (Deep) ---
+            async def get_inner_title():
+                try:
+                    if "notebook" not in page.url:
+                        first_card = page.locator("mat-card").first
+                        await first_card.click()
+                        await page.wait_for_url("**/notebook/**", timeout=15000)
+                    
+                    title_el = page.locator("input[aria-label='Notebook title'], input[aria-label='筆記本標題']")
+                    for _ in range(12): # Wait up to 60s
+                        val = await title_el.input_value()
+                        if val and "Untitled" not in val and "未命名" not in val:
+                            return val.strip()
+                        await asyncio.sleep(5)
+                except:
+                    pass
+                return None
+
+            # Execution Flow: 1 -> 2 -> Fallback
+            result = await get_dashboard_title()
+            if not result:
+                print("🔄 Dashboard scan failed. Trying Inner Page...")
+                result = await get_inner_title()
+            
+            if result:
+                final_title = result
+            else:
+                # --- LAYER 3: Title Hint Fallback (The Iron Hand) ---
+                print("⚠️ Auto-naming failed. Using Title Hint as fallback.")
+                final_title = title_hint if title_hint else "Untitled Research"
 
             if map_file and mapping_key:
-                save_title = final_title
-                # V4 FIX: The "Untitled Virus" Patch
-                # If Google failed to name it, DO NOT save "Untitled" to the map.
-                # Forcefully use the filename (title_hint) as the canonical title.
-                if "Untitled" in save_title or "未命名" in save_title:
-                    save_title = title_hint if title_hint else mapping_key
-                    print(f"⚠️ Title resolution stuck on 'Untitled'. Forcefully using filename: {save_title}")
-                    # Also update final_title so the pipeline receives the correct name
-                    final_title = save_title
-                
-                save_mapping(map_file, mapping_key, save_title)
+                save_mapping(map_file, mapping_key, final_title)
 
             await browser.close()
             print(f"RESULT:{final_title}") # Reliable output for shell capture

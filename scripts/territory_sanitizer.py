@@ -6,7 +6,9 @@ import logging
 # Configure logging to be very explicit for the user
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - 🛡️ SANITIZER - %(message)s')
 
-ROOT_DIR = "/Users/chenpeijun/Library/Mobile Documents/com~apple~CloudDocs/研究工作流"
+# Normalize Root Directory handling for portability
+DEFAULT_MAC_ICLOUD = os.path.expanduser("~/Library/Mobile Documents/com~apple~CloudDocs/研究工作流")
+ROOT_DIR = os.getenv("RESEARCH_ROOT_DIR") or DEFAULT_MAC_ICLOUD
 
 def sanitize_territory():
     """

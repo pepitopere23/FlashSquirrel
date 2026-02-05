@@ -22,11 +22,16 @@ import shutil
 import socket
 import hashlib
 import json
+from datetime import datetime
 from typing import Optional, List, Any, Dict, Set
-from watchdog.observers.polling import PollingObserver as Observer
+from watchdog.observers import Observer # Native Observer (FSEvents on Mac) to avoid Polling deadlocks
 from watchdog.events import FileSystemEventHandler
 from google import genai
 from google.genai import types
+try:
+    from scripts.mental_model import MentalModel
+except ImportError:
+    from mental_model import MentalModel
 from dotenv import load_dotenv
 
 # RED-TEAM SHIELD: Custom Exceptions for Iron Persistence
@@ -137,6 +142,16 @@ class StateTracker:
                 logging.error(f"⚠️ State load failed: {e}")
         return {"processed": {}, "fault_history": {}, "version": "1.2.0-Ironclad"}
 
+    def _normalize_path(self, path: str) -> str:
+        """
+        Converts absolute paths to home-relative paths (~) to ensure 
+        portability and prevent PII leakage in the state file.
+        """
+        home = os.path.expanduser("~")
+        if path.startswith(home):
+            return path.replace(home, "~", 1)
+        return path
+
     def _sync_hashes(self) -> None:
         processed = self.state.get("processed", {})
         for _, info in processed.items():
@@ -149,6 +164,7 @@ class StateTracker:
         V3 Upgrade: Economic Reality Check (Don't trust DB if file is missing).
         """
         h = file_hash or RobustUtils.calculate_hash(file_path)
+        norm_path = self._normalize_path(file_path)
         
         # 1. DB Check
         if h not in self.processed_hashes:
@@ -170,7 +186,9 @@ class StateTracker:
         """Saves a file as completed in the persistent store."""
         if "processed" not in self.state: self.state["processed"] = {}
         
-        self.state["processed"][file_path] = {
+        norm_path = self._normalize_path(file_path)
+
+        self.state["processed"][norm_path] = {
             "hash": file_hash,
             "timestamp": time.time(),
             "meta": metadata or {}
@@ -284,8 +302,9 @@ class RobustUtils:
                     return target_path
             time.sleep(1)
             
-        logging.warning(f"⚠️ Sync Timeout: {target_path}")
-        return target_path
+        logging.warning(f"⚠️ Sync Timeout: {target_path}. Re-queuing for later.")
+        # Phase S: Stray Dog Resilience - Raise transient error to trigger automatic re-queue
+        raise TransientResearchError(f"iCloud Sync Timeout: {os.path.basename(target_path)}")
 
     @staticmethod
     def safe_rename(old_path: str, new_name: str) -> str:
@@ -478,8 +497,14 @@ class SmartTriage:
             shutil.move(file_path, dest_path)
             # Write reason slip
             reason_path = dest_path + ".reason.txt"
-            with open(reason_path, "w", encoding="utf-8") as f:
-                f.write(f"Reason: {reason}\nTimestamp: {time.ctime()}\n")
+            # V33: Bureaucrat Protocol - Attach ID Card (Original Path)
+            try:
+                with open(reason_path, "w", encoding="utf-8") as f:
+                    f.write(f"Reason: {reason}\n")
+                    f.write(f"Original_Path: {os.path.dirname(file_path)}\n")
+                    f.write(f"Timestamp: {time.ctime()}\n")
+            except Exception as e:
+                logging.warning(f"⚠️ Failed to write Bureaucrat Note for {filename}: {e}")
             logging.warning(f"🚑 Triage: Moved {filename} to {category}. Reason: {reason}")
             return dest_path
         except Exception as e:
@@ -489,9 +514,10 @@ class SmartTriage:
 class ResearchPipeline:
     """The central engine for processing research folders and generating Gemini reports."""
     
-    def __init__(self, state_tracker: StateTracker) -> None:
+    def __init__(self, state_tracker: StateTracker, mental_model: MentalModel) -> None:
         """Initializes the Gemini client and model priorities."""
         self.state_tracker = state_tracker
+        self.mental_model = mental_model
         if not GEMINI_API_KEY:
             logging.error("GEMINI_API_KEY not found in .env")
             sys.exit(1)
@@ -616,9 +642,11 @@ class ResearchPipeline:
         logging.info(f"🔍 [Phase 1] Starting Gemini Research on: {filename}")
         
         # ATOMIC LOCK (Phase G): Prevent concurrent research on the same topic
-        lock_path = os.path.join(parent_dir, ".research_lock")
+        # ATOMIC LOCK (Phase G): Prevent concurrent research on the same topic
+        # V4 Fix: Lock specific file, not entire folder, to allow parallel image processing
+        lock_path = os.path.join(parent_dir, f".research_lock_{filename}")
         if os.path.exists(lock_path):
-            logging.warning(f"🔒 Topic locked: {os.path.basename(parent_dir)} is being researched by another process.")
+            logging.warning(f"🔒 File locked: {filename} is being researched by another process.")
             return None
         
         with open(lock_path, "w") as f: f.write(str(time.time()))
@@ -716,9 +744,44 @@ class ResearchPipeline:
                         content_part = None
 
                 # 3. Binary/Image/PDF - Pass as Blob
-                elif mime.startswith('image') or mime == 'application/pdf':
-                    with open(file_path, "rb") as f:
-                        content_part = {'mime_type': mime, 'data': f.read()}
+                    # SAFE COPY FIX: Copy to /tmp to avoid iCloud resource deadlocks (Errno 11)
+                    temp_safe_path = os.path.join("/tmp", f"safe_{uuid.uuid4()}_{filename}")
+                    copy_success = False
+                    
+                    # INFINITE RETRY LOOP (Phase H - Devil's Fix): Persist FOREVER through locks
+                    # "Drop & Forget" means we never give up.
+                    attempt = 0
+                    while True:
+                        attempt += 1
+                        try:
+                            shutil.copy2(file_path, temp_safe_path)
+                            copy_success = True
+                            break # Success! Exit loop.
+                        except OSError as e: # Errno 11 is OSError
+                            if e.errno == 11 or "Resource deadlock avoided" in str(e):
+                                if attempt % 10 == 0: # Log every 10 attempts to reduce noise
+                                    logging.warning(f"🔒 Copy Locked (Attempt {attempt}): {e}. Waiting for iCloud... (Infinite Persistence)")
+                                time.sleep(1) # Wait 1s and try again
+                            else:
+                                logging.warning(f"⚠️ Copy Failed (Non-Lock Error): {e}")
+                                break # Non-lock error, exit loop (fallback to direct read)
+                    
+                    try:
+                        if copy_success:
+                            with open(temp_safe_path, "rb") as f:
+                                content_part = {'mime_type': mime, 'data': f.read()}
+                        else:
+                            # Fallback to direct read (only for non-lock errors)
+                            logging.warning(f"⚠️ Safe copy failed, trying direct read...")
+                            with open(file_path, "rb") as f:
+                                content_part = {'mime_type': mime, 'data': f.read()}
+                    except Exception as e:
+                        logging.error(f"❌ Failed to read content blob: {e}")
+                        # Move to corruption quarantine if unreadable
+                        raise TransientResearchError(f"File Unreadable (Lock/Corruption): {e}")
+                    finally:
+                        if os.path.exists(temp_safe_path):
+                            os.remove(temp_safe_path)
                 
                 # 4. Fallback
                 else:
@@ -1048,6 +1111,14 @@ class AsyncProcessor:
         with open(upload_package_path, "w", encoding="utf-8") as f: f.write(content_to_push)
         
         topic: str = os.path.basename(folder_path)
+        
+        # V31 Platinum Plan: Context Injection (Semantic Anchoring)
+        if "Resurrected" in folder_path or "ICU" in folder_path:
+            dominant_context = self.pipeline.mental_model.get_dominant_context()
+            if dominant_context:
+                logging.info(f"🧠 Platinum Context Injection: Overriding '{topic}' with Mental Model '{dominant_context}'")
+                topic = dominant_context
+
         topic_id: str = RobustUtils.get_topic_id(folder_path)
         logging.info(f"🤖 Automating NotebookLM: {topic} (ID: {topic_id})")
         automator_script = os.path.join(os.path.dirname(__file__), "notebooklm_automator.py")
@@ -1065,7 +1136,27 @@ class AsyncProcessor:
             )
             stdout, stderr = await proc.communicate()
             
+            # --- Cycle 6.2: Title Return & Renaming Logic ---
+            new_title = None
+            if stdout:
+                stdout_text = stdout.decode()
+                # Resolve from end of output to avoid log contamination
+                results = [line.replace("RESULT:", "").strip() for line in stdout_text.splitlines() if "RESULT:" in line]
+                if results:
+                    new_title = results[-1] # Take the final definitive result
+                    # Safety Shield: If title is too long or contains code-like artifacts, sanitize
+                    if len(new_title) > 100: 
+                        new_title = new_title[:97] + "..."
+            
             if proc.returncode == 0:
+                if new_title and "Untitled" not in new_title and "未命名" not in new_title:
+                    logging.info(f"🏷️ [Title Return] Captured from NotebookLM: {new_title}")
+                    # Trigger local renaming or metadata update here if needed
+                    # For now, we ensure the state tracker knows the final title
+                    self.state_tracker.mark_done(folder_path, file_hash, {"title": new_title})
+                
+                # V31: Learn successful context
+                self.pipeline.mental_model.add_context(topic)
                 break
             
             stderr_text = stderr.decode()
@@ -1142,6 +1233,21 @@ class AsyncProcessor:
                 logging.info(f"🏷️ Semantic Unified: {folder_path} -> {final_topic_path}")
         
         # Phase I: Final Feedback Loop Restoration
+        # 🛡️ Iron Shield V4: Ghost Detector (Content Validation)
+        # If the report is an empty 'skeleton' (likely sync failure), kill it and retry.
+        try:
+            if os.path.exists(report_path):
+                with open(report_path, 'r') as f:
+                    content = f.read()
+                if len(content.strip()) < 300: # Threshold for ghost reports
+                    logging.warning(f"👻 Ghost Report detected for {os.path.basename(file_path)}. Purging and triggering re-queue.")
+                    os.remove(report_path)
+                    # Triggering error to allow re-queue instead of marking as done
+                    raise Exception(f"Ghost Report (Length: {len(content)})")
+        except Exception as e:
+            if "Ghost Report" in str(e): raise
+            logging.debug(f"Ghost detector failed (safe to skip): {e}")
+
         # No more 'processed_reports' move. Keep topics alive in 'input_thoughts'.
         return None
         
@@ -1202,6 +1308,12 @@ class InputHandler(FileSystemEventHandler):
         basename: str = os.path.basename(file_path)
         
         if RobustUtils.should_ignore(file_path):
+            return
+        
+        # 🛡️ Iron Shield V4: Smart Filter (Naming Loop Isolation)
+        # Rigidly ignore any files carrying the 'Resurrected' (.r) or 'Reason' tags.
+        if ".r " in basename or ".re " in basename or ".reason" in basename.lower():
+            logging.debug(f"🔇 Smart Filter shielded: {basename}")
             return
         
         # Phase G: Early Collision Shield (Pre-Settling)
@@ -1278,8 +1390,12 @@ class InputHandler(FileSystemEventHandler):
 
         logging.info(f"⚡️ New Thought Detected: {os.path.basename(file_path)} (Queued)")
         # Settling Grace Period (Critical for OS/Cloud file stability)
-        time.sleep(2) 
-        self.processor.add_task(file_path)
+        # Phase T: Non-blocking Settle Shield (Async Sleep)
+        async def delayed_add():
+            await asyncio.sleep(2)
+            self.processor.add_task(file_path)
+        
+        asyncio.run_coroutine_threadsafe(delayed_add(), self.loop)
         return None
 
 async def scan_existing_files(processor: AsyncProcessor, state_tracker: StateTracker) -> None:
@@ -1308,34 +1424,64 @@ async def scan_existing_files(processor: AsyncProcessor, state_tracker: StateTra
     except Exception as e:
         logging.debug(f"Initial sanitation pass skipped: {e}")
 
+    # 🛡️ Iron Shield V13: Priority Inversion (Hot-Path First)
+    # Pass 1: Scan ROOT and 'input_thoughts' first
+    priority_dirs = [ROOT_DIR, os.path.join(ROOT_DIR, "input_thoughts")]
+    
+    for p_dir in priority_dirs:
+        if not os.path.exists(p_dir): continue
+        # Non-recursive scan for immediate priority
+        for item in os.listdir(p_dir):
+            item_path = os.path.join(p_dir, item)
+            if os.path.isfile(item_path):
+                if RobustUtils.should_ignore(item_path): continue
+                # Trigger ghost check and add
+                _process_scan_item(item_path, processor, state_tracker)
+    
+    # Pass 2: Full Recursive Scan for deep historical data
     for root, dirs, files in os.walk(ROOT_DIR):
         for file in files:
-            file_path: str = os.path.join(root, file)
-            # Unified Ignore Logic (Recursive Shield)
-            if RobustUtils.should_ignore(file_path):
-                continue
-            
-            # Skip if already processed (Report OR Failure OR State DB exists)
-            stem = os.path.splitext(file)[0]
-            report_name = f"report_{stem}.md"
-            failure_name = f"RESEARCH_FAILURE_{stem}.md"
-            
-            # Layer 1: Conventional check
-            if os.path.exists(os.path.join(root, report_name)) or os.path.exists(os.path.join(root, failure_name)):
-                continue
-            
-            # Layer 2: Persistence check (The "Zero-Amnesia" Shield)
-            if state_tracker.is_processed(file_path):
-                logging.debug(f"⏭️ Skipping (Recorded in state DB): {file}")
-                continue
-
-            logging.info(f"📂 Found unprocessed historical file: {file}")
-            processor.add_task(file_path)
-            
-            # CRITICAL FIX: Yield control to the worker!
-            # If we don't await here, this sync loop starves the async worker.
-            await asyncio.sleep(0.01)
+            file_path = os.path.join(root, file)
+            _process_scan_item(file_path, processor, state_tracker)
+            await asyncio.sleep(0.01) # Yield to worker
     return None
+
+def _process_scan_item(file_path: str, processor: AsyncProcessor, state_tracker: StateTracker) -> None:
+    """Helper to unify scan logic with Ghost Buster (1KB Shield)."""
+    if RobustUtils.should_ignore(file_path): return
+    
+    # V34: Iron Sandbox - Symlink Ban (Prevent Exfiltration)
+    if os.path.islink(file_path):
+        logging.warning(f"🛡️ Iron Sandbox: Ignored symlink {os.path.basename(file_path)}")
+        return
+    
+    basename = os.path.basename(file_path)
+    # V4 Filter
+    if ".r " in basename or ".re " in basename or ".reason" in basename.lower(): return
+    
+    supported_exts = ('.txt', '.md', '.png', '.jpg', '.jpeg', '.pdf', '.icloud', '.webloc', '.url', '.html')
+    if not file_path.lower().endswith(supported_exts): return
+
+    root = os.path.dirname(file_path)
+    stem = os.path.splitext(basename)[0]
+    report_path = os.path.join(root, f"report_{stem}.md")
+    failure_path = os.path.join(root, f"RESEARCH_FAILURE_{stem}.md")
+
+    # 🛡️ Iron Shield V13: Scanner-Level Ghost Buster (1KB Shield)
+    if os.path.exists(report_path):
+        if os.path.getsize(report_path) < 1024:
+            logging.warning(f"👻 Purging Ghost Report during scan: {os.path.basename(report_path)} (<1KB)")
+            try: os.remove(report_path)
+            except: pass
+            # Logic: Continue to allow re-processing
+        else:
+            return # Skip truly finished
+
+    if os.path.exists(failure_path): return
+    if state_tracker.is_processed(file_path): return
+
+    logging.info(f"📂 Enqueuing Scan Item: {basename}")
+    processor.add_task(file_path)
 
 def main() -> None:
     """
@@ -1358,8 +1504,36 @@ def main() -> None:
             src = os.path.join(icu_dir, f)
             # If it's a file (not a reason.txt)
             if os.path.isfile(src) and not f.endswith(".reason.txt"):
-                # Resurrect to a special folder 
+                # V33: Bureaucrat Protocol - ID Card Check
+                # Resurrect to a special folder by default
                 resurrect_dir = os.path.join(ROOT_DIR, "input_thoughts", "Resurrected_ICU")
+                
+                # Check for ID Card (.reason.txt)
+                reason_card = src + ".reason.txt"
+                if os.path.exists(reason_card):
+                    try:
+                        with open(reason_card, 'r', encoding='utf-8') as rc:
+                            content = rc.read()
+                            for line in content.splitlines():
+                                if line.startswith("Original_Path:"):
+                                    original_path = line.split(":", 1)[1].strip()
+                                    
+                                    # V34: Iron Sandbox - Anti-Jailbreak Lock
+                                    abs_orig = os.path.abspath(original_path)
+                                    abs_root = os.path.abspath(ROOT_DIR)
+                                    
+                                    if abs_orig.startswith(abs_root):
+                                        if os.path.exists(original_path):
+                                            resurrect_dir = original_path
+                                            logging.info(f"🪪 ID Card Found & Verified: Restoring {f} to {original_path}")
+                                    else:
+                                        logging.critical(f"🚨 Jailbreak Attempt Blocked! {f} tried to escape to {original_path}")
+                                        # Force fallback to safe zone
+                                        resurrect_dir = os.path.join(ROOT_DIR, "input_thoughts", "Resurrected_ICU")
+                                    break
+                    except Exception as e:
+                        logging.warning(f"⚠️ Failed to read ID Card for {f}: {e}")
+                
                 os.makedirs(resurrect_dir, exist_ok=True)
                 dest = os.path.join(resurrect_dir, f)
                 try:
@@ -1372,13 +1546,20 @@ def main() -> None:
     state_file = os.path.join(ROOT_DIR, ".squirrel_state.json")
     state_tracker = StateTracker(state_file)
     
-    pipeline: ResearchPipeline = ResearchPipeline(state_tracker)
+    # V31 Mental Model
+    mental_model_file = os.path.join(ROOT_DIR, ".mental_model.json")
+    mental_model = MentalModel(mental_model_file)
+    
+    pipeline: ResearchPipeline = ResearchPipeline(state_tracker, mental_model)
     processor: AsyncProcessor = AsyncProcessor(pipeline, state_tracker)
     handler: InputHandler = InputHandler(processor)
     
-    observer: Observer = Observer()
-    observer.schedule(handler, ROOT_DIR, recursive=True)
-    observer.start()
+    # DIAGNOSIS: Observer (even Native) causes [Errno 11] Resource Deadlock on iCloud folders during read.
+    # FIX: Disable Observer entirely and rely on periodic_scan (Mid-term solution).
+    # observer: Observer = Observer()
+    # observer.schedule(handler, ROOT_DIR, recursive=True)
+    # observer.start()
+    logging.info("👀 Observer Disabled (Deadlock Prevention). Relying on Periodic Scan.")
     
     # Verify Self
     try:
@@ -1400,9 +1581,27 @@ def main() -> None:
     # Schedule historical scan
     loop.run_until_complete(scan_existing_files(processor, state_tracker))
     
-    # Start the worker
+    # MID-TERM FIX: Periodic Scanning (Every 5 minutes)
+    # This catches folders created via iPhone/Shortcuts that watchdog might miss
+    async def periodic_scan() -> None:
+        """Periodically re-scan for missed folders (iCloud batch sync workaround)."""
+        while True:
+            await asyncio.sleep(300)  # 5 minutes
+            logging.info("🔄 Periodic scan starting (catching missed folders)...")
+            await scan_existing_files(processor, state_tracker)
+            logging.info("🔄 Periodic scan complete.")
+    
+    # CRITICAL FIX: Run worker and periodic scan concurrently
+    async def run_both() -> None:
+        """Run worker and periodic scan concurrently."""
+        await asyncio.gather(
+            processor.worker(),
+            periodic_scan()
+        )
+    
+    # Start both the worker and periodic scanner
     try:
-        loop.run_until_complete(processor.worker())
+        loop.run_until_complete(run_both())
     except KeyboardInterrupt:
         observer.stop()
     observer.join()

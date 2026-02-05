@@ -1211,6 +1211,21 @@ class AsyncProcessor:
                 logging.info(f"🏷️ Semantic Unified: {folder_path} -> {final_topic_path}")
         
         # Phase I: Final Feedback Loop Restoration
+        # 🛡️ Iron Shield V4: Ghost Detector (Content Validation)
+        # If the report is an empty 'skeleton' (likely sync failure), kill it and retry.
+        try:
+            if os.path.exists(report_path):
+                with open(report_path, 'r') as f:
+                    content = f.read()
+                if len(content.strip()) < 300: # Threshold for ghost reports
+                    logging.warning(f"👻 Ghost Report detected for {os.path.basename(file_path)}. Purging and triggering re-queue.")
+                    os.remove(report_path)
+                    # Triggering error to allow re-queue instead of marking as done
+                    raise Exception(f"Ghost Report (Length: {len(content)})")
+        except Exception as e:
+            if "Ghost Report" in str(e): raise
+            logging.debug(f"Ghost detector failed (safe to skip): {e}")
+
         # No more 'processed_reports' move. Keep topics alive in 'input_thoughts'.
         return None
         
@@ -1271,6 +1286,12 @@ class InputHandler(FileSystemEventHandler):
         basename: str = os.path.basename(file_path)
         
         if RobustUtils.should_ignore(file_path):
+            return
+        
+        # 🛡️ Iron Shield V4: Smart Filter (Naming Loop Isolation)
+        # Rigidly ignore any files carrying the 'Resurrected' (.r) or 'Reason' tags.
+        if ".r " in basename or ".re " in basename or ".reason" in basename.lower():
+            logging.debug(f"🔇 Smart Filter shielded: {basename}")
             return
         
         # Phase G: Early Collision Shield (Pre-Settling)
@@ -1386,6 +1407,10 @@ async def scan_existing_files(processor: AsyncProcessor, state_tracker: StateTra
             file_path: str = os.path.join(root, file)
             # Unified Ignore Logic (Recursive Shield)
             if RobustUtils.should_ignore(file_path):
+                continue
+
+            # 🛡️ Iron Shield V4: Smart Filter (Existing File Scan)
+            if ".r " in file or ".re " in file or ".reason" in file.lower():
                 continue
             
             # Skip if already processed (Report OR Failure OR State DB exists)

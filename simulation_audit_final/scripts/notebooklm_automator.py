@@ -51,6 +51,11 @@ async def create_and_upload(file_path: str, title_hint: Optional[str] = None, ma
     # Create profile dir if needed
     os.makedirs(USER_DATA_DIR, exist_ok=True)
     
+    # V34: Iron Sandbox - Symlink Ban (Prevent Exfiltration)
+    if os.path.islink(file_path):
+        print(f"🔥 CRITICAL FAIL: Symlink rejected: {file_path}")
+        return "Failed"
+    
     async with async_playwright() as p:
         try:
             # V4: Persistent Context (Long-term Memory)
